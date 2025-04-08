@@ -1,29 +1,20 @@
 <script setup lang="ts">
-import { openDB } from 'idb'
 import { message, Flex, Spin, Space, Badge, Button } from 'ant-design-vue'
 import { Sender, BubbleList, type BubbleListProps, Attachments } from 'ant-design-x-vue'
-import { computed, h, onWatcherCleanup, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { UserOutlined, CloudUploadOutlined, LinkOutlined } from '@ant-design/icons-vue'
+import { DBService } from '../services/db.service'
+import { ApiService, apiConfig } from '../services/api.service'
+import { MessageService, type ChatMessage } from '../services/message.service'
 
 defineOptions({ name: 'Sender' })
-
-// 添加 API 配置项
-const apiConfig = {
-  model: 'Qwen/QwQ-32B', // 使用的模型名称
-  stream: true, // 是否启用流式响应
-  max_tokens: 512, // 生成文本的最大长度
-  temperature: 0.7, // 温度参数，控制输出的随机性，越高越随机
-  top_p: 0.7, // 核采样阈值，控制输出的多样性
-  top_k: 50, // 保留概率最高的前k个token
-  frequency_penalty: 0.5, // 频率惩罚，避免重复生成相似内容
-  n: 1, // 每次请求生成的回复数量
-}
 
 const [messageApi, contextHolder] = message.useMessage()
 
 const searchValue = ref('Hello? this is X!')
 const loading = ref<boolean>(false)
 
+// 角色配置
 const rolesAsObject: BubbleListProps['roles'] = {
   ai: {
     placement: 'start',
@@ -33,13 +24,11 @@ const rolesAsObject: BubbleListProps['roles'] = {
     style: {
       maxWidth: '600px',
     },
-    loadingRender: () => h(Space, null, [h(Spin, { size: 'small' }), 'Custom loading...']),
+    loadingRender: () => h(Space, null, [h(Spin, { size: 'small' }), '思考中...']),
     messageRender: (items: any) =>
-      h(
-        Flex,
-        { vertical: true, gap: 'middle' },
+      h(Flex, { vertical: true, gap: 'middle' }, () =>
         items.map((item: any) => {
-          if (item.type === 'reasoning_content') {
+          if (item.type === 'reasoning_content' && item.content) {
             return h(
               'div',
               {
@@ -64,7 +53,7 @@ const rolesAsObject: BubbleListProps['roles'] = {
                       color: '#1890ff',
                     },
                   },
-                  '推理过程：',
+                  () => '推理过程：',
                 ),
                 item.content,
               ],
@@ -89,14 +78,6 @@ const items = ref<any>([])
 // 判断是否有对话内容
 const hasMessages = computed(() => items.value && items.value.length > 0)
 
-interface ChatMessage {
-  id: number // 添加必需的 id 字段
-  role: 'user' | 'ai'
-  content: any
-  timestamp: number
-  chatId: string
-}
-
 // 接收当前聊天ID
 const props = defineProps<{
   currentChatId?: string
@@ -114,31 +95,10 @@ watch(
   },
 )
 
-// 数据库初始化函数
-const initDB = async () => {
-  return await openDB('chatDB', 1, {
-    upgrade(db) {
-      // 检查并创建 messages 存储空间
-      if (!db.objectStoreNames.contains('messages')) {
-        const messagesStore = db.createObjectStore('messages', {
-          keyPath: 'id',
-          autoIncrement: true,
-        })
-        // 创建 chatId 索引用于查询
-        messagesStore.createIndex('chatId', 'chatId')
-      }
-    },
-  })
-}
-
 // 加载聊天历史
 const loadChatHistory = async (chatId: string) => {
   try {
-    const db = await initDB()
-    const tx = db.transaction('messages', 'readonly')
-    const store = tx.objectStore('messages')
-    const index = store.index('chatId')
-    const messages = await index.getAll(chatId)
+    const messages = await DBService.loadChatHistory(chatId)
 
     items.value = messages.map((msg) => ({
       role: msg.role,
@@ -147,42 +107,50 @@ const loadChatHistory = async (chatId: string) => {
     }))
 
     // 自动滚动到底部
-    const messagesContainer = document.querySelector('.messages-container')
-    if (messagesContainer) {
-      setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight
-      }, 100)
-    }
+    scrollToBottom()
   } catch (error) {
     console.error(error)
     messageApi.error('加载聊天历史失败')
   }
 }
 
-// 修改 onSubmit 函数中的数据库操作
+// 滚动到底部
+const scrollToBottom = () => {
+  const messagesContainer = document.querySelector('.messages-container')
+  if (messagesContainer) {
+    setTimeout(() => {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight
+    }, 100)
+  }
+}
+
+// 发送消息
 const emit = defineEmits(['create-chat'])
 
 const onSubmit = async () => {
   const newChatId = Date.now().toString()
+  const chatId = props.currentChatId || newChatId
+
+  // 如果没有当前聊天ID，创建新对话
   if (!props.currentChatId) {
-    // 自动创建新对话
     await emit('create-chat', {
       id: newChatId,
-      title: searchValue.value.slice(0, 20) + '...', // 使用用户输入的前20个字符作为标题
+      title: searchValue.value.slice(0, 20) + '...',
       groupId: 'default',
       createdAt: Date.now(),
     })
-    console.log('1', newChatId)
   }
 
+  // 创建用户消息
   const userMessage: ChatMessage = {
     id: Date.now(),
     role: 'user',
     content: searchValue.value,
     timestamp: Date.now(),
-    chatId: props.currentChatId || newChatId,
+    chatId,
   }
 
+  // 创建AI消息占位
   const aiMessage: ChatMessage = {
     id: Date.now() + 1,
     role: 'ai',
@@ -191,167 +159,81 @@ const onSubmit = async () => {
       { type: 'content', content: '' },
     ],
     timestamp: Date.now(),
-    chatId: props.currentChatId || newChatId,
+    chatId,
   }
 
   try {
-    const db = await initDB()
-    const tx = db.transaction('messages', 'readwrite')
-    const store = tx.objectStore('messages')
-    await store.add(userMessage)
-    await tx.done // 等待事务完成
+    // 保存用户消息到数据库
+    await DBService.saveMessage(userMessage)
 
+    // 更新UI
     items.value?.push(userMessage)
     items.value?.push(aiMessage)
 
+    // 设置加载状态
     loading.value = true
 
-    const body = {
-      ...apiConfig,
-      messages: [{ content: searchValue.value, role: 'user' }],
-    }
+    // 发送API请求
+    const response = await ApiService.sendMessage(searchValue.value)
 
-    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer sk-ihpdfwnuksiqamsawakkemytfxfkqbhbqdqltlzrkhvtxjlh',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    })
-
+    // 处理响应
     if (apiConfig.stream) {
-      await handleStreamResponse(response, String(props.currentChatId))
+      await MessageService.handleStreamResponse(
+        response,
+        chatId,
+        (reasoning_content: string, content: string) => {
+          // console.log('reasoning_content:', reasoning_content)
+          // console.log('content:', content)
+          // 更新UI显示
+          items.value = [
+            ...items.value.slice(0, items.value.length - 1),
+            {
+              role: 'ai',
+              content: [
+                { type: 'reasoning_content', content: reasoning_content },
+                { type: 'content', content },
+              ],
+              loading: false,
+              timestamp: Date.now(),
+            },
+          ]
+        },
+      )
     } else {
-      await handleNormalResponse(response, String(props.currentChatId))
-    }
-  } catch (error) {
-    loading.value = false
-    messageApi.error('请求失败')
-  }
-}
-
-// 流式传输
-const handleStreamResponse = async (response: Response, chatId: string) => {
-  const rb = await response.body
-  if (!rb) throw new Error('Response body is null')
-
-  // 使用 getReader() 方法获取一个可读流的读取器
-  // 这个读取器允许我们以块的形式读取响应体中的数据
-  // 返回一个 ReadableStreamDefaultReader 对象，用于后续逐块读取数据流
-  const reader = rb.getReader()
-  // TextDecoder 主要用于将从服务器接收到的二进制数据流解码为可读的文本字符串。
-  const decoder = new TextDecoder()
-  let content = ''
-  let reasoning_content = ''
-
-  try {
-    while (true) {
-      const { value, done } = await reader.read()
-      if (done) break
-
-      const chunk = decoder.decode(value)
-      const lines = chunk.split('\n')
-
-      for (const line of lines) {
-        // 检查当前行是否为空或不是以'data: '开头
-        // 如果是空行或不是以'data: '开头，则跳过当前行继续处理下一行
-        if (!line.trim() || !line.startsWith('data: ')) continue
-
-        const data = line.slice(6)
-        if (data === '[DONE]') continue
-
-        try {
-          const response = JSON.parse(data)
-          const { choices } = response
-          if (choices && choices.length > 0) {
-            const { delta } = choices[0]
-            if (delta.content) content += delta.content
-            if (delta.reasoning_content) reasoning_content += delta.reasoning_content
-
-            // 实时更新界面显示
-            items.value = [
-              ...items.value.slice(0, items.value.length - 1),
-              {
-                role: 'ai',
-                content: [
-                  { type: 'reasoning_content', content: reasoning_content },
-                  { type: 'content', content },
-                ],
-                loading: false,
-                timestamp: Date.now(),
-              },
-            ]
-          }
-        } catch (e) {
-          console.error('解析流数据失败:', e)
-        }
+      const aiResponse = await MessageService.handleNormalResponse(response, chatId)
+      if (aiResponse) {
+        items.value = [
+          ...items.value.slice(0, items.value.length - 1),
+          {
+            role: 'ai',
+            content: aiResponse.content,
+            loading: false,
+            timestamp: aiResponse.timestamp,
+          },
+        ]
       }
     }
-
-    // 流结束后，一次性写入数据库
-    const db = await openDB('chatDB', 1)
-    const finalAiMessage: ChatMessage = {
-      id: Date.now(),
-      role: 'ai',
-      content: [
-        { type: 'reasoning_content', content: reasoning_content },
-        { type: 'content', content },
-      ],
-      timestamp: Date.now(),
-      chatId,
-    }
-    await db.add('messages', finalAiMessage)
+  } catch (error) {
+    console.error('发送消息失败:', error)
+    messageApi.error('请求失败')
   } finally {
     loading.value = false
     searchValue.value = ''
+    scrollToBottom()
   }
 }
 
-const handleNormalResponse = async (response: Response, chatId: string) => {
-  const data = await response.json()
-  const { choices } = data
-  if (choices.length > 0) {
-    const {
-      message: { content, reasoning_content },
-    } = choices[0]
-
-    const aiMessage: ChatMessage = {
-      id: Date.now(),
-      role: 'ai',
-      content: [
-        { type: 'reasoning_content', content: reasoning_content },
-        { type: 'content', content },
-      ],
-      timestamp: Date.now(),
-      chatId,
-    }
-
-    const db = await openDB('chatDB', 1)
-    await db.add('messages', aiMessage)
-
-    items.value = [
-      ...items.value.slice(0, items.value.length - 1),
-      {
-        role: 'ai',
-        content: aiMessage.content,
-        loading: false,
-        timestamp: aiMessage.timestamp,
-      },
-    ]
-  }
-  loading.value = false
-  searchValue.value = ''
-}
-
+// 重置对话
 const reset = () => {
   items.value = []
   searchValue.value = '你好，有什么可以帮你的'
 }
 
+// 附件上传相关
 const open = ref(false)
 const senderRef = ref<any>()
 const files = ref<any>([])
+
 // sender 头部
 const senderHeader = computed(() =>
   h(
@@ -381,7 +263,7 @@ const senderHeader = computed(() =>
                   title: '上传附件',
                   description: '点击上传或者拖拽文件到此处',
                 },
-          getDropContainer: () => senderRef.value?.nativeElement,
+          getDropContainer: () => senderRef.value, // 修复: 移除 .nativeElement
         }),
     },
   ),
@@ -415,12 +297,12 @@ defineExpose({
     </div>
     <div class="sender-container" :class="{ 'has-messages': hasMessages }">
       <Flex vertical gap="middle" style="width: 100%">
+        <!--           :header="senderHeader"
+          :prefix="badgeNode" -->
         <Sender
           ref="senderRef"
           v-model:value="searchValue"
           :loading="loading"
-          :header="senderHeader"
-          :prefix="badgeNode"
           @submit="onSubmit"
           @cancel="
             () => {

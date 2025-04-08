@@ -226,14 +226,16 @@ const deleteChat = (chat: Chat) => {
         const db = await initDB()
         await db.delete('chats', chat.id)
 
-        // 更新界面数据
-        const defaultGroup = chatGroups.value.find((g) => g.id === 'default')
-        if (defaultGroup) {
-          defaultGroup.chats = defaultGroup.chats.filter((c) => c.id !== chat.id)
-        }
+        // 更新所有分组的界面数据
+        chatGroups.value.forEach((group) => {
+          // 从每个分组中过滤掉被删除的对话
+          group.chats = group.chats.filter((c) => c.id !== chat.id)
+        })
 
+        // 如果删除的是当前选中的对话，清空当前对话ID
         if (currentChatId.value === chat.id) {
           currentChatId.value = ''
+          emit('select-chat', '')
         }
 
         message.success('删除对话成功')
