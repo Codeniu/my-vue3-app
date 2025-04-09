@@ -118,9 +118,10 @@ const loadChatHistory = async (chatId: string) => {
 const scrollToBottom = () => {
   const messagesContainer = document.querySelector('.messages-container')
   if (messagesContainer) {
-    setTimeout(() => {
+    // 使用 requestAnimationFrame 确保在下一帧渲染前执行滚动
+    requestAnimationFrame(() => {
       messagesContainer.scrollTop = messagesContainer.scrollHeight
-    }, 100)
+    })
   }
 }
 
@@ -182,8 +183,6 @@ const onSubmit = async () => {
         response,
         chatId,
         (reasoning_content: string, content: string) => {
-          // console.log('reasoning_content:', reasoning_content)
-          // console.log('content:', content)
           // 更新UI显示
           items.value = [
             ...items.value.slice(0, items.value.length - 1),
@@ -197,6 +196,8 @@ const onSubmit = async () => {
               timestamp: Date.now(),
             },
           ]
+          // 在每次更新内容后滚动到底部
+          scrollToBottom()
         },
       )
     } else {
@@ -211,6 +212,8 @@ const onSubmit = async () => {
             timestamp: aiResponse.timestamp,
           },
         ]
+        // 在非流式响应更新后滚动到底部
+        scrollToBottom()
       }
     }
   } catch (error) {
@@ -286,6 +289,7 @@ const badgeNode = computed(() =>
 defineExpose({
   onSubmit,
   reset,
+  hasMessages,
 })
 </script>
 
@@ -320,7 +324,8 @@ defineExpose({
 <style>
 .chat-container {
   position: relative;
-  height: 600px;
+  max-height: 600px;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   border: 1px solid #eee;

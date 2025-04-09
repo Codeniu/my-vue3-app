@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import Sender from './components/Sender.vue'
 import Conversation from './components/Conversation.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import Prompts from './components/Prompts.vue'
+import WelcomeX from './components/WelcomeX.vue'
 
 const currentChatId = ref<string>('')
 const conversationRef = ref()
@@ -19,6 +21,11 @@ const senderRef = ref()
 const handleResetSender = () => {
   senderRef.value?.reset()
 }
+
+const hasMessages = computed(() => {
+  console.log('hasMessages', senderRef.value?.hasMessages)
+  return senderRef.value?.hasMessages
+})
 </script>
 
 <template>
@@ -31,10 +38,15 @@ const handleResetSender = () => {
       />
     </div>
     <div class="sender-wrapper">
+      <div class="content-scroll-wrapper" v-if="!hasMessages">
+        <WelcomeX />
+        <Prompts />
+      </div>
       <Sender ref="senderRef" :currentChatId="currentChatId" @create-chat="handleCreateChat" />
     </div>
   </div>
 </template>
+
 <style scoped>
 .ai-bot-container {
   display: flex;
@@ -50,5 +62,32 @@ const handleResetSender = () => {
 .sender-wrapper {
   flex: 2;
   padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.content-scroll-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* 添加滚动条样式 */
+.content-scroll-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #d9d9d9;
+  border-radius: 3px;
+}
+
+.content-scroll-wrapper::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
 }
 </style>
