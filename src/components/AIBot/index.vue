@@ -22,6 +22,11 @@ const handleResetSender = () => {
   senderRef.value?.reset()
 }
 
+const handleSelect = (message: string) => {
+  console.log('handleSelect', message)
+  senderRef.value?.selectPromot(message)
+}
+
 const hasMessages = computed(() => {
   console.log('hasMessages', senderRef.value?.hasMessages)
   return senderRef.value?.hasMessages
@@ -40,7 +45,7 @@ const hasMessages = computed(() => {
     <div class="sender-wrapper">
       <div class="content-scroll-wrapper" v-if="!hasMessages">
         <WelcomeX />
-        <Prompts />
+        <Prompts @select="handleSelect" />
       </div>
       <Sender ref="senderRef" :currentChatId="currentChatId" @create-chat="handleCreateChat" />
     </div>

@@ -286,10 +286,16 @@ const badgeNode = computed(() =>
   ),
 )
 
+const selectPromot = (message: string) => {
+  searchValue.value = message
+  onSubmit()
+}
+
 defineExpose({
   onSubmit,
   reset,
   hasMessages,
+  selectPromot,
 })
 </script>
 
