@@ -8,6 +8,11 @@
         <button @click="addText">文本</button>
         <button @click="deleteSelected">删除</button>
         <button @click="clearCanvas">清空</button>
+        <button @click="exportCanvas">导出</button>
+        <button class="import-btn">
+          导入
+          <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
+        </button>
         <div class="color-picker">
           <label>颜色：</label>
           <input type="color" v-model="currentColor" @change="updateObjectColor" />
@@ -107,7 +112,7 @@ onMounted(async () => {
 const addTextDemo = () => {
   if (!canvas.value) return
 
-  const textValue = 'fabric.js sandbox'
+  const textValue = 'codeniu'
   const text = new fabric.Textbox(textValue, {
     originX: 'center',
     splitByGrapheme: true,
@@ -308,6 +313,44 @@ const handleObjectScaling = (e: any) => {
     }
   }
 }
+
+// 导出画布内容
+const exportCanvas = () => {
+  if (!canvas.value) return
+  const json = canvas.value.toJSON()
+  const blob = new Blob([JSON.stringify(json)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'canvas.json'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+// 处理文件导入
+const handleFileImport = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files?.length || !canvas.value) return
+
+  const file = input.files[0]
+  const reader = new FileReader()
+
+  reader.onload = (e) => {
+    try {
+      const json = JSON.parse(e.target?.result as string)
+      canvas.value?.loadFromJSON(json, () => {
+        canvas.value?.renderAll()
+      })
+    } catch (error) {
+      console.error('导入失败:', error)
+    }
+  }
+
+  reader.readAsText(file)
+  input.value = '' // 重置input，允许重复导入相同文件
+}
 </script>
 
 <style scoped>
@@ -394,5 +437,20 @@ canvas {
 
 .info-item span {
   color: #333;
+}
+
+.import-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
 }
 </style>
