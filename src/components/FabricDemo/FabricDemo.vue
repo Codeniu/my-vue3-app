@@ -19,102 +19,137 @@
         <canvas ref="canvasRef"></canvas>
       </div>
     </div>
-    <div v-if="selectedObject" class="object-info">
-      <h3>元素信息</h3>
-      <div class="info-item">
-        <label>名称：</label>
-        <input
-          v-model="selectedObject.name"
-          @input="updateObjectName"
-          type="text"
-          placeholder="输入元素名称"
-        />
-      </div>
-      <div class="info-item">
-        <label>类型：</label>
-        <span>{{ getObjectType(selectedObject.type) }}</span>
-      </div>
-      <div class="info-item">
-        <button class="delete-btn" @click="deleteSelected">删除元素</button>
-      </div>
-      <div class="info-item">
-        <label>位置：</label>
-        <span>
-          X: {{ Math.round(selectedObject.left) }}, Y: {{ Math.round(selectedObject.top) }}
-        </span>
-      </div>
-      <div class="info-item" v-if="selectedObject.width !== undefined">
-        <label>尺寸：</label>
-        <div class="size-inputs">
-          <label> 宽：</label>
+    <div class="object-info">
+      <h3>{{ selectedObject ? '元素信息' : '画布信息' }}</h3>
+      <template v-if="selectedObject">
+        <div class="info-item">
+          <label>类型：</label>
+          <span>{{ getObjectType(selectedObject.type) }}</span>
+        </div>
+        <div class="info-item">
+          <label>名称：</label>
           <input
-            type="number"
-            v-model="selectedObject.width"
-            @input="updateObjectSize"
-            class="size-input"
-            placeholder="宽度"
-          />
-          <label> 高：</label>
-          <input
-            type="number"
-            v-model="selectedObject.height"
-            @input="updateObjectSize"
-            class="size-input"
-            placeholder="高度"
+            v-model="selectedObject.name"
+            @input="updateObjectName"
+            type="text"
+            style="width: 160px; display: inline-block"
+            placeholder="输入元素名称"
           />
         </div>
-      </div>
-      <div class="info-item" v-if="selectedObject.radius !== undefined">
-        <label>半径：</label>
-        <input
-          type="number"
-          v-model="selectedObject.radius"
-          @input="updateObjectRadius"
-          class="size-input"
-          placeholder="半径"
-        />
-      </div>
-      <div class="info-item">
-        <label>填充：</label>
-        <input type="color" v-model="selectedObject.fill" @input="updateObjectColor" />
-      </div>
-      <div class="info-item">
-        <label>边框：</label>
-        <input type="color" v-model="selectedObject.stroke" @input="updateObjectStroke" />
-      </div>
-
-      <div class="info-item">
-        <label>层级：</label>
-        <div class="layer-buttons">
-          <button @click="bringToFront">置顶</button>
-          <button @click="bringForward">上移</button>
-          <button @click="sendBackwards">下移</button>
-          <button @click="sendToBack">置底</button>
+        <div class="info-item">
+          <button class="delete-btn" @click="deleteSelected">删除元素</button>
         </div>
-      </div>
-      <div class="info-item">
-        <label>翻转：</label>
-        <div class="flip-buttons">
-          <button @click="toggleFlipX" :class="{ active: selectedObject.flipX }">水平翻转</button>
-          <button @click="toggleFlipY" :class="{ active: selectedObject.flipY }">垂直翻转</button>
+        <div class="info-item">
+          <label>位置：</label>
+          <span>
+            X: {{ Math.round(selectedObject.left) }}, Y: {{ Math.round(selectedObject.top) }}
+          </span>
         </div>
-      </div>
-      <div class="info-item">
-        <label>旋转：</label>
-        <div class="rotate-controls">
-          <input
-            type="number"
-            v-model="selectedObject.angle"
-            @input="updateObjectAngle"
-            class="angle-input"
-            placeholder="角度"
-          />
-          <div class="rotate-buttons">
-            <button @click="rotateLeft">左转45°</button>
-            <button @click="rotateRight">右转45°</button>
+        <div class="info-item" v-if="selectedObject.width !== undefined">
+          <label>尺寸：</label>
+          <div class="size-inputs">
+            <label> 宽：</label>
+            <input
+              type="number"
+              v-model="selectedObject.width"
+              @input="updateObjectSize"
+              class="size-input"
+              placeholder="宽度"
+            />
+            <label> 高：</label>
+            <input
+              type="number"
+              v-model="selectedObject.height"
+              @input="updateObjectSize"
+              class="size-input"
+              placeholder="高度"
+            />
           </div>
         </div>
-      </div>
+        <div class="info-item" v-if="selectedObject.radius !== undefined">
+          <label>半径：</label>
+          <input
+            type="number"
+            v-model="selectedObject.radius"
+            @input="updateObjectRadius"
+            class="size-input"
+            placeholder="半径"
+          />
+        </div>
+        <div class="info-item">
+          <label>填充：</label>
+          <input type="color" v-model="selectedObject.fill" @input="updateObjectColor" />
+        </div>
+        <div class="info-item">
+          <label>边框：</label>
+          <input type="color" v-model="selectedObject.stroke" @input="updateObjectStroke" />
+        </div>
+
+        <div class="info-item">
+          <label>层级：</label>
+          <div class="layer-buttons">
+            <button @click="bringToFront">置顶</button>
+            <button @click="bringForward">上移</button>
+            <button @click="sendBackwards">下移</button>
+            <button @click="sendToBack">置底</button>
+          </div>
+        </div>
+        <div class="info-item">
+          <label>翻转：</label>
+          <div class="flip-buttons">
+            <button @click="toggleFlipX" :class="{ active: selectedObject.flipX }">水平翻转</button>
+            <button @click="toggleFlipY" :class="{ active: selectedObject.flipY }">垂直翻转</button>
+          </div>
+        </div>
+        <div class="info-item">
+          <label>旋转：</label>
+          <div class="rotate-controls">
+            <input
+              type="number"
+              v-model="selectedObject.angle"
+              @input="updateObjectAngle"
+              class="angle-input"
+              placeholder="角度"
+            />
+            <div class="rotate-buttons">
+              <button @click="rotateLeft">左转45°</button>
+              <button @click="rotateRight">右转45°</button>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="!selectedObject">
+        <div class="info-item">
+          <label>画布尺寸：</label>
+          <div class="size-inputs">
+            <label>宽：</label>
+            <input
+              type="number"
+              v-model="canvasProperties.width"
+              @input="updateCanvasProperties"
+              class="size-input"
+              placeholder="宽度"
+            />
+            <label>高：</label>
+            <input
+              type="number"
+              v-model="canvasProperties.height"
+              @input="updateCanvasProperties"
+              class="size-input"
+              placeholder="高度"
+            />
+          </div>
+        </div>
+        <div class="info-item">
+          <label>背景色：</label>
+          <input
+            type="color"
+            v-model="canvasProperties.backgroundColor"
+            @input="updateCanvasProperties"
+          />
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -127,15 +162,20 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const canvas = shallowRef<fabric.Canvas | null>(null)
 const currentColor = ref('#797979')
 const selectedObject = ref<any>(null)
+const canvasProperties = ref({
+  width: 800,
+  height: 600,
+  backgroundColor: '#F2F2F2',
+})
 
 onMounted(async () => {
   await nextTick()
 
   if (canvasRef.value) {
     canvas.value = new fabric.Canvas(canvasRef.value, {
-      width: 800,
-      height: 600,
-      backgroundColor: '#F2F2F2',
+      width: canvasProperties.value.width,
+      height: canvasProperties.value.height,
+      backgroundColor: canvasProperties.value.backgroundColor,
       preserveObjectStacking: true, // 保持对象堆叠顺序
     })
 
@@ -366,6 +406,26 @@ const updateObjectStroke = () => {
 const handleSelectionCleared = () => {
   currentColor.value = '#000000'
   selectedObject.value = null
+  // 更新画布属性
+  if (canvas.value) {
+    canvasProperties.value = {
+      width: canvas.value.getWidth(),
+      height: canvas.value.getHeight(),
+      backgroundColor: canvas.value.backgroundColor as string,
+    }
+  }
+}
+
+// 更新画布属性
+const updateCanvasProperties = () => {
+  if (!canvas.value) return
+  canvas.value.setDimensions({
+    width: canvasProperties.value.width,
+    height: canvasProperties.value.height,
+  })
+  canvas.value.setBackgroundColor(canvasProperties.value.backgroundColor, () => {
+    canvas.value?.renderAll()
+  })
 }
 
 // 处理对象修改事件
@@ -758,7 +818,7 @@ canvas {
 }
 
 .size-input {
-  width: 60px;
+  width: 120px;
   padding: 4px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
