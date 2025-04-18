@@ -84,6 +84,16 @@
           <label>边框：</label>
           <input type="color" v-model="selectedObject.stroke" @input="updateObjectStroke" />
         </div>
+        <div class="info-item">
+          <label>边框宽度：</label>
+          <input
+            type="number"
+            v-model="selectedObject.strokeWidth"
+            @input="updateObjectStrokeWidth"
+            class="size-input"
+            placeholder="边框宽度"
+          />
+        </div>
 
         <div class="info-item">
           <label>层级：</label>
@@ -375,6 +385,7 @@ const handleObjectSelected = () => {
       name: activeObject.name || '',
       fill: (activeObject.get('fill') as string) || '#000000',
       stroke: (activeObject.get('stroke') as string) || '#000000',
+      strokeWidth: activeObject.strokeWidth || 1,
       flipX: activeObject.flipX || false,
       flipY: activeObject.flipY || false,
       angle: activeObject.angle || 0,
@@ -649,6 +660,16 @@ const updateObjectRadius = () => {
   const activeObject = canvas.value.getActiveObject()
   if (activeObject && activeObject.type === 'circle') {
     activeObject.set('radius', Number(selectedObject.value.radius))
+    canvas.value.renderAll()
+  }
+}
+
+// 更新对象边框宽度
+const updateObjectStrokeWidth = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('strokeWidth', Number(selectedObject.value.strokeWidth))
     canvas.value.renderAll()
   }
 }
