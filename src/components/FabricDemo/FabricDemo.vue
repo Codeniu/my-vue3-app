@@ -8,7 +8,6 @@
         <button @click="addCircle">圆形</button>
         <button @click="addTriangle">三角形</button>
         <button @click="addText">文本</button>
-        <button @click="deleteSelected">删除</button>
         <button @click="clearCanvas">清空</button>
         <button @click="exportCanvas">导出</button>
         <button class="import-btn">
@@ -36,6 +35,9 @@
         <span>{{ getObjectType(selectedObject.type) }}</span>
       </div>
       <div class="info-item">
+        <button class="delete-btn" @click="deleteSelected">删除元素</button>
+      </div>
+      <div class="info-item">
         <label>位置：</label>
         <span>
           X: {{ Math.round(selectedObject.left) }}, Y: {{ Math.round(selectedObject.top) }}
@@ -43,23 +45,44 @@
       </div>
       <div class="info-item" v-if="selectedObject.width !== undefined">
         <label>尺寸：</label>
-        <span>
-          宽: {{ Math.round(selectedObject.width) }}, 高:
-          {{ Math.round(selectedObject.height) }}
-        </span>
+        <div class="size-inputs">
+          <label> 宽：</label>
+          <input
+            type="number"
+            v-model="selectedObject.width"
+            @input="updateObjectSize"
+            class="size-input"
+            placeholder="宽度"
+          />
+          <label> 高：</label>
+          <input
+            type="number"
+            v-model="selectedObject.height"
+            @input="updateObjectSize"
+            class="size-input"
+            placeholder="高度"
+          />
+        </div>
       </div>
       <div class="info-item" v-if="selectedObject.radius !== undefined">
         <label>半径：</label>
-        <span>{{ Math.round(selectedObject.radius) }}</span>
+        <input
+          type="number"
+          v-model="selectedObject.radius"
+          @input="updateObjectRadius"
+          class="size-input"
+          placeholder="半径"
+        />
       </div>
       <div class="info-item">
-        <label>颜色：</label>
+        <label>填充：</label>
         <input type="color" v-model="selectedObject.fill" @input="updateObjectColor" />
       </div>
       <div class="info-item">
         <label>边框：</label>
         <input type="color" v-model="selectedObject.stroke" @input="updateObjectStroke" />
       </div>
+
       <div class="info-item">
         <label>层级：</label>
         <div class="layer-buttons">
@@ -299,14 +322,15 @@ const clearCanvas = () => {
 const handleObjectSelected = () => {
   if (!canvas.value) return
 
-  const activeObject = canvas.value.getActiveObject()
+  const activeObject = canvas.value.getActiveObject() as any
+
   if (activeObject) {
     selectedObject.value = {
       type: activeObject.type,
       left: activeObject.left,
       top: activeObject.top,
-      width: activeObject.width,
-      height: activeObject.height,
+      width: activeObject?.cacheWidth || activeObject.width,
+      height: activeObject?.cacheHeight || activeObject.height,
       radius: activeObject.type === 'circle' ? (activeObject as fabric.Circle).radius : undefined,
       name: activeObject.name || '',
       fill: (activeObject.get('fill') as string) || '#000000',
@@ -348,14 +372,25 @@ const handleSelectionCleared = () => {
 const handleObjectModified = (e: any) => {
   if (!canvas.value) return
   const modifiedObject = e.target
+  console.log({ modifiedObject })
   if (modifiedObject && selectedObject.value) {
+    // 设置统一的边框宽度
+    modifiedObject.set('strokeUniform', true)
+
+    // 更新对象属性
     selectedObject.value = {
       ...selectedObject.value,
-      left: modifiedObject.left,
-      top: modifiedObject.top,
-      width: modifiedObject.width,
-      height: modifiedObject.height,
-      radius: modifiedObject.type === 'circle' ? modifiedObject.radius : undefined,
+      left: Math.round(modifiedObject.left),
+      top: Math.round(modifiedObject.top),
+      width: Math.round(modifiedObject.getScaledWidth()),
+      height: Math.round(modifiedObject.getScaledHeight()),
+      radius:
+        modifiedObject.type === 'circle'
+          ? Math.round(modifiedObject.getScaledWidth() / 2)
+          : undefined,
+      angle: modifiedObject.angle || 0,
+      flipX: modifiedObject.flipX || false,
+      flipY: modifiedObject.flipY || false,
     }
   }
 }
@@ -385,17 +420,21 @@ const getObjectType = (type: string) => {
 const handleObjectScaling = (e: any) => {
   if (!canvas.value) return
   const scalingObject = e.target
-  console.log(scalingObject)
 
   if (scalingObject && selectedObject.value) {
     selectedObject.value = {
       ...selectedObject.value,
+      left: Math.round(scalingObject.left),
+      top: Math.round(scalingObject.top),
       width: Math.round(scalingObject.getScaledWidth()),
       height: Math.round(scalingObject.getScaledHeight()),
       radius:
         scalingObject.type === 'circle'
           ? Math.round(scalingObject.getScaledWidth() / 2)
           : undefined,
+      angle: scalingObject.angle || 0,
+      flipX: scalingObject.flipX || false,
+      flipY: scalingObject.flipY || false,
     }
   }
 }
@@ -530,6 +569,29 @@ const rotateRight = () => {
     canvas.value.renderAll()
   }
 }
+
+// 更新对象尺寸
+const updateObjectSize = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set({
+      width: Number(selectedObject.value.width),
+      height: Number(selectedObject.value.height),
+    })
+    canvas.value.renderAll()
+  }
+}
+
+// 更新对象半径
+const updateObjectRadius = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject && activeObject.type === 'circle') {
+    activeObject.set('radius', Number(selectedObject.value.radius))
+    canvas.value.renderAll()
+  }
+}
 </script>
 
 <style scoped>
@@ -603,12 +665,12 @@ canvas {
 
 .info-item label {
   display: inline-block;
-  width: 60px;
   color: #666;
 }
 
 .info-item input {
-  width: 200px;
+  display: inline-block;
+  width: 80px;
   padding: 4px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -630,6 +692,16 @@ canvas {
 
 .flip-buttons button.active {
   background-color: #2196f3;
+}
+
+.delete-btn {
+  width: 100%;
+  background-color: #f44336;
+  margin-bottom: 12px;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
 }
 
 .import-btn {
@@ -678,5 +750,17 @@ canvas {
 .rotate-buttons button {
   padding: 4px 8px;
   font-size: 12px;
+}
+
+.size-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.size-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 </style>
