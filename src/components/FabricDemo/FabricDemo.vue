@@ -76,6 +76,22 @@
           <button @click="toggleFlipY" :class="{ active: selectedObject.flipY }">垂直翻转</button>
         </div>
       </div>
+      <div class="info-item">
+        <label>旋转：</label>
+        <div class="rotate-controls">
+          <input
+            type="number"
+            v-model="selectedObject.angle"
+            @input="updateObjectAngle"
+            class="angle-input"
+            placeholder="角度"
+          />
+          <div class="rotate-buttons">
+            <button @click="rotateLeft">左转45°</button>
+            <button @click="rotateRight">右转45°</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -297,6 +313,7 @@ const handleObjectSelected = () => {
       stroke: (activeObject.get('stroke') as string) || '#000000',
       flipX: activeObject.flipX || false,
       flipY: activeObject.flipY || false,
+      angle: activeObject.angle || 0,
     }
   }
 }
@@ -479,6 +496,40 @@ const sendToBack = () => {
     canvas.value.renderAll()
   }
 }
+
+// 更新对象角度
+const updateObjectAngle = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('angle', Number(selectedObject.value.angle))
+    canvas.value.renderAll()
+  }
+}
+
+// 向左旋转45度
+const rotateLeft = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    const newAngle = (activeObject.angle || 0) - 45
+    activeObject.set('angle', newAngle)
+    selectedObject.value.angle = newAngle
+    canvas.value.renderAll()
+  }
+}
+
+// 向右旋转45度
+const rotateRight = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    const newAngle = (activeObject.angle || 0) + 45
+    activeObject.set('angle', newAngle)
+    selectedObject.value.angle = newAngle
+    canvas.value.renderAll()
+  }
+}
 </script>
 
 <style scoped>
@@ -602,6 +653,29 @@ canvas {
 }
 
 .layer-buttons button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.rotate-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.angle-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.rotate-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.rotate-buttons button {
   padding: 4px 8px;
   font-size: 12px;
 }
