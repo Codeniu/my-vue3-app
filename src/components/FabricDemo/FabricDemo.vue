@@ -2,7 +2,9 @@
   <div class="fabric-demo">
     <div class="main-content">
       <div class="toolbar">
-        <button @click="addRect">矩形</button>
+        <button @click="addRect">墙体 -</button>
+        <button @click="addRectVertical">墙体 |</button>
+        <button @click="addRoom">房间</button>
         <button @click="addCircle">圆形</button>
         <button @click="addTriangle">三角形</button>
         <button @click="addText">文本</button>
@@ -13,10 +15,6 @@
           导入
           <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
         </button>
-        <div class="color-picker">
-          <label>颜色：</label>
-          <input type="color" v-model="currentColor" @change="updateObjectColor" />
-        </div>
       </div>
       <div class="canvas-container">
         <canvas ref="canvasRef"></canvas>
@@ -54,6 +52,30 @@
         <label>半径：</label>
         <span>{{ Math.round(selectedObject.radius) }}</span>
       </div>
+      <div class="info-item">
+        <label>颜色：</label>
+        <input type="color" v-model="selectedObject.fill" @input="updateObjectColor" />
+      </div>
+      <div class="info-item">
+        <label>边框：</label>
+        <input type="color" v-model="selectedObject.stroke" @input="updateObjectStroke" />
+      </div>
+      <div class="info-item">
+        <label>层级：</label>
+        <div class="layer-buttons">
+          <button @click="bringToFront">置顶</button>
+          <button @click="bringForward">上移</button>
+          <button @click="sendBackwards">下移</button>
+          <button @click="sendToBack">置底</button>
+        </div>
+      </div>
+      <div class="info-item">
+        <label>翻转：</label>
+        <div class="flip-buttons">
+          <button @click="toggleFlipX" :class="{ active: selectedObject.flipX }">水平翻转</button>
+          <button @click="toggleFlipY" :class="{ active: selectedObject.flipY }">垂直翻转</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -64,7 +86,7 @@ import { fabric } from 'fabric'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const canvas = shallowRef<fabric.Canvas | null>(null)
-const currentColor = ref('#000000')
+const currentColor = ref('#797979')
 const selectedObject = ref<any>(null)
 
 onMounted(async () => {
@@ -74,7 +96,7 @@ onMounted(async () => {
     canvas.value = new fabric.Canvas(canvasRef.value, {
       width: 800,
       height: 600,
-      backgroundColor: 'gray',
+      backgroundColor: '#F2F2F2',
       preserveObjectStacking: true, // 保持对象堆叠顺序
     })
 
@@ -143,11 +165,46 @@ const addRect = () => {
   const rect = new fabric.Rect({
     left: 100,
     top: 100,
-    width: 100,
-    height: 80,
+    width: 200,
+    height: 20,
     fill: currentColor.value,
     stroke: '#000000',
     strokeWidth: 1,
+  })
+
+  canvas.value.add(rect)
+  canvas.value.setActiveObject(rect)
+}
+
+const addRectVertical = () => {
+  if (!canvas.value) return
+
+  const rect = new fabric.Rect({
+    left: 100,
+    top: 100,
+    width: 20,
+    height: 200,
+    fill: currentColor.value,
+    stroke: '#000000',
+    strokeWidth: 1,
+  })
+
+  canvas.value.add(rect)
+  canvas.value.setActiveObject(rect)
+}
+
+const addRoom = () => {
+  if (!canvas.value) return
+
+  const rect = new fabric.Rect({
+    left: 100,
+    top: 100,
+    width: 200,
+    height: 200,
+    fill: '',
+    stroke: '#797979',
+    strokeWidth: 20,
+    strokeUniform: true, // 使边框均匀分布
   })
 
   canvas.value.add(rect)
@@ -222,24 +279,12 @@ const clearCanvas = () => {
   canvas.value.renderAll()
 }
 
-// 更新对象颜色
-const updateObjectColor = () => {
-  if (!canvas.value) return
-
-  const activeObject = canvas.value.getActiveObject()
-  if (activeObject) {
-    activeObject.set('fill', currentColor.value)
-    canvas.value.renderAll()
-  }
-}
-
 // 处理对象选中事件
 const handleObjectSelected = () => {
   if (!canvas.value) return
 
   const activeObject = canvas.value.getActiveObject()
   if (activeObject) {
-    currentColor.value = (activeObject.get('fill') as string) || '#000000'
     selectedObject.value = {
       type: activeObject.type,
       left: activeObject.left,
@@ -248,7 +293,31 @@ const handleObjectSelected = () => {
       height: activeObject.height,
       radius: activeObject.type === 'circle' ? (activeObject as fabric.Circle).radius : undefined,
       name: activeObject.name || '',
+      fill: (activeObject.get('fill') as string) || '#000000',
+      stroke: (activeObject.get('stroke') as string) || '#000000',
+      flipX: activeObject.flipX || false,
+      flipY: activeObject.flipY || false,
     }
+  }
+}
+
+// 更新对象颜色
+const updateObjectColor = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('fill', selectedObject.value.fill)
+    canvas.value.renderAll()
+  }
+}
+
+// 更新对象边框颜色
+const updateObjectStroke = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('stroke', selectedObject.value.stroke)
+    canvas.value.renderAll()
   }
 }
 
@@ -351,6 +420,65 @@ const handleFileImport = (event: Event) => {
   reader.readAsText(file)
   input.value = '' // 重置input，允许重复导入相同文件
 }
+
+// 处理水平翻转
+const toggleFlipX = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('flipX', !activeObject.flipX)
+    selectedObject.value.flipX = activeObject.flipX
+    canvas.value.renderAll()
+  }
+}
+
+// 处理垂直翻转
+const toggleFlipY = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.set('flipY', !activeObject.flipY)
+    selectedObject.value.flipY = activeObject.flipY
+    canvas.value.renderAll()
+  }
+}
+
+// 处理层级控制
+const bringToFront = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.bringToFront()
+    canvas.value.renderAll()
+  }
+}
+
+const bringForward = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.bringForward()
+    canvas.value.renderAll()
+  }
+}
+
+const sendBackwards = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.sendBackwards()
+    canvas.value.renderAll()
+  }
+}
+
+const sendToBack = () => {
+  if (!canvas.value || !selectedObject.value) return
+  const activeObject = canvas.value.getActiveObject()
+  if (activeObject) {
+    activeObject.sendToBack()
+    canvas.value.renderAll()
+  }
+}
 </script>
 
 <style scoped>
@@ -439,6 +567,20 @@ canvas {
   color: #333;
 }
 
+.flip-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.flip-buttons button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.flip-buttons button.active {
+  background-color: #2196f3;
+}
+
 .import-btn {
   position: relative;
   overflow: hidden;
@@ -452,5 +594,15 @@ canvas {
   height: 100%;
   opacity: 0;
   cursor: pointer;
+}
+
+.layer-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.layer-buttons button {
+  padding: 4px 8px;
+  font-size: 12px;
 }
 </style>
