@@ -165,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, shallowRef } from 'vue'
+import { ref, onMounted, nextTick, shallowRef, onUnmounted } from 'vue'
 import { fabric } from 'fabric'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -176,6 +176,22 @@ const canvasProperties = ref({
   width: 800,
   height: 600,
   backgroundColor: '#F2F2F2',
+})
+
+// 添加键盘事件处理函数
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Delete' && selectedObject.value) {
+    deleteSelected()
+  }
+}
+
+// 添加键盘事件监听器以实现Delete键删除选中元素的功能
+// 添加键盘事件监听
+window.addEventListener('keydown', handleKeyDown)
+
+// 在组件卸载时移除事件监听
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
 })
 
 onMounted(async () => {
