@@ -16,7 +16,7 @@
         </button>
       </div>
       <div class="canvas-container">
-        <canvas ref="canvasRef"></canvas>
+        <canvas ref="canvasRef" class="background-grid"></canvas>
       </div>
     </div>
     <div class="object-info">
@@ -178,8 +178,8 @@ const selectedObject = ref<any>({
   stroke: '#fff',
 })
 const canvasProperties = ref({
-  width: 800,
-  height: 600,
+  width: 600,
+  height: 400,
   backgroundColor: '#F2F2F2',
 })
 
@@ -199,42 +199,77 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
 
+const initControlStyle = () => {
+  FabricObject.ownDefaults.objectCaching = false
+  FabricObject.ownDefaults.borderColor = 'blue'
+  FabricObject.ownDefaults.cornerColor = 'white'
+  FabricObject.ownDefaults.cornerStrokeColor = '#c0c0c0'
+  FabricObject.ownDefaults.borderOpacityWhenMoving = 1
+  FabricObject.ownDefaults.borderScaleFactor = 1
+  FabricObject.ownDefaults.cornerSize = 8
+  FabricObject.ownDefaults.cornerStyle = 'rect'
+  FabricObject.ownDefaults.centeredScaling = false
+  FabricObject.ownDefaults.centeredRotation = true
+  FabricObject.ownDefaults.transparentCorners = false
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getItemsByAttr(attr, val) {
+  const objectList = []
+  traverseObjects(canvas.value.getObjects(), attr, val, objectList)
+  return objectList
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getItemByAttr(attr, val) {
+  const objectList = []
+  console.log(canvas.value.getObjects())
+  traverseObjects(canvas.value.getObjects(), attr, val, objectList)
+  return objectList[0]
+}
+
+// 按名称获取对象
+function traverseObjects(objects, attr, val, objectList) {
+  for (const i in objects) {
+    if (objects[i]['type'] == 'group') {
+      traverseObjects(objects[i].getObjects(), attr, val, objectList)
+    } else if (objects[i][attr] == val) {
+      objectList.push(objects[i])
+    }
+  }
+}
+
+const setPainter = () => {
+  const bg = new fabric.Rect({
+    name: 'template',
+    width: canvasProperties.value.width,
+    height: canvasProperties.value.height,
+    stroke: 'pink',
+    strokeWidth: 2,
+    fill: canvasProperties.value.backgroundColor,
+    evented: false,
+    selectable: false,
+  })
+
+  bg.canvas = canvas.value
+  canvas.value.backgroundImage = bg
+}
+
 onMounted(async () => {
   await nextTick()
 
   if (canvasRef.value) {
     canvas.value = new fabric.Canvas(canvasRef.value, {
-      width: canvasProperties.value.width,
-      height: canvasProperties.value.height,
-      backgroundColor: canvasProperties.value.backgroundColor,
+      width: 800,
+      height: 600,
       preserveObjectStacking: true, // 保持对象堆叠顺序
     })
 
-    const bg = new fabric.Rect({
-      width: 990,
-      height: 990,
-      stroke: 'pink',
-      strokeWidth: 10,
-      fill: '',
-      evented: false,
-      selectable: false,
-    })
-
-    bg.canvas = canvas.value
-    canvas.value.backgroundImage = bg
+    // 设置画布
+    setPainter()
 
     // 设置控制点样式
-    FabricObject.ownDefaults.objectCaching = false
-    FabricObject.ownDefaults.borderColor = 'blue'
-    FabricObject.ownDefaults.cornerColor = 'white'
-    FabricObject.ownDefaults.cornerStrokeColor = '#c0c0c0'
-    FabricObject.ownDefaults.borderOpacityWhenMoving = 1
-    FabricObject.ownDefaults.borderScaleFactor = 1
-    FabricObject.ownDefaults.cornerSize = 8
-    FabricObject.ownDefaults.cornerStyle = 'rect'
-    FabricObject.ownDefaults.centeredScaling = false
-    FabricObject.ownDefaults.centeredRotation = true
-    FabricObject.ownDefaults.transparentCorners = false
+    initControlStyle()
 
     addTextDemo()
 
@@ -246,12 +281,100 @@ onMounted(async () => {
 
     // 监听鼠标滚轮事件
     canvas.value.on('mouse:wheel', function (opt) {
-      const delta = opt.e.deltaY
-      let zoom = canvas.value!.getZoom()
-      zoom *= 0.999 ** delta
-      canvas.value!.setZoom(Math.min(Math.max(zoom, 0.01), 20))
+      const e = opt.e
+      if (e.ctrlKey) {
+        // 按住Ctrl键时进行缩放
+        const delta = opt.e.deltaY
+        let zoom = canvas.value!.getZoom()
+        zoom *= 0.999 ** delta
+        canvas.value!.setZoom(Math.min(Math.max(zoom, 0.01), 20))
+        // 更新画布尺寸
+        canvasProperties.value.width = Math.round(canvas.value!.getWidth() * zoom)
+        canvasProperties.value.height = Math.round(canvas.value!.getHeight() * zoom)
+      } else if (e.shiftKey) {
+        // 按住Shift键时进行水平移动
+        const vpt = canvas.value!.viewportTransform!
+        const maxPan = 1000 // 最大平移距离
+        const newPosX = vpt[4] - opt.e.deltaY
+        vpt[4] = Math.min(Math.max(newPosX, -maxPan), maxPan)
+        canvas.value!.requestRenderAll()
+      } else {
+        // 不按任何键时进行上下移动
+        const vpt = canvas.value!.viewportTransform!
+        const maxPan = 1000 // 最大平移距离
+        const newPosY = vpt[5] - opt.e.deltaY
+        vpt[5] = Math.min(Math.max(newPosY, -maxPan), maxPan)
+        canvas.value!.requestRenderAll()
+      }
       opt.e.preventDefault()
       opt.e.stopPropagation()
+    })
+
+    // 添加画布拖拽功能
+    let isDragging = false
+    let lastPosX = 0
+    let lastPosY = 0
+    let isSpacePressed = false
+
+    // 监听空格键按下和释放
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !isSpacePressed) {
+        isSpacePressed = true
+        canvas.value!.defaultCursor = 'grab'
+        if (canvas.value!.getActiveObject()) {
+          canvas.value!.discardActiveObject()
+          canvas.value!.renderAll()
+        }
+      }
+    })
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        isSpacePressed = false
+        isDragging = false
+        canvas.value!.defaultCursor = 'default'
+      }
+    })
+
+    // 监听鼠标事件实现拖拽
+    canvas.value.on('mouse:down', (opt) => {
+      if (isSpacePressed) {
+        isDragging = true
+        canvas.value!.selection = false
+        lastPosX = opt.e.clientX
+        lastPosY = opt.e.clientY
+        canvas.value!.defaultCursor = 'grabbing'
+        opt.e.preventDefault()
+      }
+    })
+
+    canvas.value.on('mouse:move', (opt) => {
+      if (isDragging) {
+        const e = opt.e
+        const vpt = canvas.value!.viewportTransform!
+        const maxPan = 1000 // 最大平移距离
+        const newPosX = e.clientX - lastPosX
+        const newPosY = e.clientY - lastPosY
+
+        // 限制平移范围
+        vpt[4] = Math.min(Math.max(vpt[4] + newPosX, -maxPan), maxPan)
+        vpt[5] = Math.min(Math.max(vpt[5] + newPosY, -maxPan), maxPan)
+
+        canvas.value!.requestRenderAll()
+        lastPosX = e.clientX
+        lastPosY = e.clientY
+        e.preventDefault()
+      }
+    })
+
+    canvas.value.on('mouse:up', () => {
+      isDragging = false
+      canvas.value!.selection = true
+      if (isSpacePressed) {
+        canvas.value!.defaultCursor = 'grab'
+      } else {
+        canvas.value!.defaultCursor = 'default'
+      }
     })
   }
 })
@@ -487,11 +610,8 @@ const handleSelectionCleared = () => {
 // 更新画布属性
 const updateCanvasProperties = () => {
   if (!canvas.value) return
-  canvas.value.setDimensions({
-    width: canvasProperties.value.width,
-    height: canvasProperties.value.height,
-  })
-  canvas.value.backgroundColor = canvasProperties.value.backgroundColor
+
+  setPainter()
   canvas.value.renderAll()
 }
 
@@ -525,7 +645,7 @@ const handleObjectModified = (e: any) => {
 // 更新对象名称
 const updateObjectName = () => {
   if (!canvas.value || !selectedObject.value) return
-  const activeObject = canvas.value.getActiveObject()
+  const activeObject: any = canvas.value.getActiveObject()
   if (activeObject) {
     activeObject.name = selectedObject.value.name
     canvas.value.renderAll()
@@ -736,16 +856,6 @@ button:hover {
   gap: 8px;
 }
 
-.canvas-container {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-canvas {
-  background-color: #ffffff;
-}
-
 .object-info {
   width: 300px;
   padding: 20px;
@@ -862,5 +972,28 @@ canvas {
   padding: 4px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.canvas-container {
+  height: 100%;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.background-grid {
+  --offsetX: 0px;
+  --offsetY: 0px;
+  --size: 8px;
+  --color: #dedcdc;
+  background-image:
+    linear-gradient(45deg, var(--color) 25%, transparent 0, transparent 75%, var(--color) 0),
+    linear-gradient(45deg, var(--color) 25%, transparent 0, transparent 75%, var(--color) 0);
+  background-position:
+    var(--offsetX) var(--offsetY),
+    calc(var(--size) + var(--offsetX)) calc(var(--size) + var(--offsetY));
+  background-size: calc(var(--size) * 2) calc(var(--size) * 2);
+  z-index: 999;
 }
 </style>
