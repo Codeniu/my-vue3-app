@@ -23,4 +23,10 @@ export default defineConfigWithVueTs(
   vueTsConfigs.recommended,
   ...oxlint.configs['flat/recommended'],
   skipFormatting,
+
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 )

@@ -98,10 +98,10 @@
         <div class="info-item">
           <label>层级：</label>
           <div class="layer-buttons">
-            <button @click="bringToFront">置顶</button>
-            <button @click="bringForward">上移</button>
-            <button @click="sendBackwards">下移</button>
-            <button @click="sendToBack">置底</button>
+            <button @click="layerElement(LayerCommand.TOP)">置顶</button>
+            <button @click="layerElement(LayerCommand.BOTTOM)">置底</button>
+            <button @click="layerElement(LayerCommand.UP)">上移</button>
+            <button @click="layerElement(LayerCommand.DOWN)">下移</button>
           </div>
         </div>
         <div class="info-item">
@@ -166,12 +166,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, shallowRef, onUnmounted } from 'vue'
-import { fabric } from 'fabric'
+import * as fabric from 'fabric'
+import { FabricObject } from 'fabric'
+import { LayerCommand } from './elements'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const canvas = shallowRef<fabric.Canvas | null>(null)
 const currentColor = ref('#797979')
-const selectedObject = ref<any>(null)
+const selectedObject = ref<any>({
+  fill: '#fff',
+  stroke: '#fff',
+})
 const canvasProperties = ref({
   width: 800,
   height: 600,
@@ -205,24 +210,39 @@ onMounted(async () => {
       preserveObjectStacking: true, // 保持对象堆叠顺序
     })
 
-    addTextDemo()
+    const bg = new fabric.Rect({
+      width: 990,
+      height: 990,
+      stroke: 'pink',
+      strokeWidth: 10,
+      fill: '',
+      evented: false,
+      selectable: false,
+    })
+
+    bg.canvas = canvas.value
+    canvas.value.backgroundImage = bg
 
     // 设置控制点样式
-    fabric.Object.prototype.set({
-      transparentCorners: false,
-      borderColor: '#2196F3',
-      cornerColor: '#2196F3',
-      cornerStyle: 'circle',
-      cornerSize: 10,
-      padding: 10,
-    })
+    FabricObject.ownDefaults.objectCaching = false
+    FabricObject.ownDefaults.borderColor = 'blue'
+    FabricObject.ownDefaults.cornerColor = 'white'
+    FabricObject.ownDefaults.cornerStrokeColor = '#c0c0c0'
+    FabricObject.ownDefaults.borderOpacityWhenMoving = 1
+    FabricObject.ownDefaults.borderScaleFactor = 1
+    FabricObject.ownDefaults.cornerSize = 8
+    FabricObject.ownDefaults.cornerStyle = 'rect'
+    FabricObject.ownDefaults.centeredScaling = false
+    FabricObject.ownDefaults.centeredRotation = true
+    FabricObject.ownDefaults.transparentCorners = false
+
+    addTextDemo()
 
     // 监听对象选择事件
     canvas.value.on('selection:created', handleObjectSelected)
     canvas.value.on('selection:updated', handleObjectSelected)
     canvas.value.on('selection:cleared', handleSelectionCleared)
     canvas.value.on('object:modified', handleObjectModified)
-    canvas.value.on('scaling', handleObjectScaling)
 
     // 监听鼠标滚轮事件
     canvas.value.on('mouse:wheel', function (opt) {
@@ -259,6 +279,27 @@ const addTextDemo = () => {
       textValue,
     ),
   })
+
+  // 创建自定义控件并添加到矩形中
+  text.controls.deleteControl = new fabric.Control({
+    x: 0.5,
+    y: -0.5,
+    offsetY: -16,
+    offsetX: 16,
+    cursorStyle: 'pointer', // 鼠标移到控件时的指针样式
+    mouseUpHandler: () => {
+      console.log('deleteControl')
+    }, // 鼠标抬起时触发的事件
+    render: function (ctx, left, top) {
+      const size = 12
+      ctx.save()
+      ctx.fillStyle = 'pink'
+      ctx.translate(left, top)
+      ctx.fillRect(-size / 2, -size / 2, size, size)
+      ctx.restore()
+    },
+  })
+
   canvas.value.add(text)
   canvas.value.centerObjectH(text)
 }
@@ -450,9 +491,8 @@ const updateCanvasProperties = () => {
     width: canvasProperties.value.width,
     height: canvasProperties.value.height,
   })
-  canvas.value.setBackgroundColor(canvasProperties.value.backgroundColor, () => {
-    canvas.value?.renderAll()
-  })
+  canvas.value.backgroundColor = canvasProperties.value.backgroundColor
+  canvas.value.renderAll()
 }
 
 // 处理对象修改事件
@@ -501,29 +541,6 @@ const getObjectType = (type: string) => {
     iText: '文本',
   }
   return typeMap[type] || type
-}
-
-// 处理对象缩放事件
-const handleObjectScaling = (e: any) => {
-  if (!canvas.value) return
-  const scalingObject = e.target
-
-  if (scalingObject && selectedObject.value) {
-    selectedObject.value = {
-      ...selectedObject.value,
-      left: Math.round(scalingObject.left),
-      top: Math.round(scalingObject.top),
-      width: Math.round(scalingObject.getScaledWidth()),
-      height: Math.round(scalingObject.getScaledHeight()),
-      radius:
-        scalingObject.type === 'circle'
-          ? Math.round(scalingObject.getScaledWidth() / 2)
-          : undefined,
-      angle: scalingObject.angle || 0,
-      flipX: scalingObject.flipX || false,
-      flipY: scalingObject.flipY || false,
-    }
-  }
 }
 
 // 导出画布内容
@@ -586,41 +603,27 @@ const toggleFlipY = () => {
   }
 }
 
-// 处理层级控制
-const bringToFront = () => {
-  if (!canvas.value || !selectedObject.value) return
-  const activeObject = canvas.value.getActiveObject()
-  if (activeObject) {
-    activeObject.bringToFront()
-    canvas.value.renderAll()
+// 处理层级显示
+const layerElement = (command: LayerCommand) => {
+  const handleElement = canvas.value.getActiveObject()
+  if (!handleElement) return
+  switch (command) {
+    case LayerCommand.UP:
+      canvas.value.bringObjectForward(handleElement)
+      break
+    case LayerCommand.DOWN:
+      canvas.value.sendObjectBackwards(handleElement)
+      break
+    case LayerCommand.TOP:
+      canvas.value.bringObjectToFront(handleElement)
+      break
+    case LayerCommand.BOTTOM:
+      canvas.value.sendObjectToBack(handleElement)
+      break
+    default:
+      break
   }
-}
-
-const bringForward = () => {
-  if (!canvas.value || !selectedObject.value) return
-  const activeObject = canvas.value.getActiveObject()
-  if (activeObject) {
-    activeObject.bringForward()
-    canvas.value.renderAll()
-  }
-}
-
-const sendBackwards = () => {
-  if (!canvas.value || !selectedObject.value) return
-  const activeObject = canvas.value.getActiveObject()
-  if (activeObject) {
-    activeObject.sendBackwards()
-    canvas.value.renderAll()
-  }
-}
-
-const sendToBack = () => {
-  if (!canvas.value || !selectedObject.value) return
-  const activeObject = canvas.value.getActiveObject()
-  if (activeObject) {
-    activeObject.sendToBack()
-    canvas.value.renderAll()
-  }
+  canvas.value.renderAll()
 }
 
 // 更新对象角度
