@@ -286,8 +286,10 @@ onMounted(async () => {
         // 按住Ctrl键时进行缩放
         const delta = opt.e.deltaY
         let zoom = canvas.value!.getZoom()
+        const point = canvas.value!.getViewportPoint(opt.e)
         zoom *= 0.999 ** delta
-        canvas.value!.setZoom(Math.min(Math.max(zoom, 0.01), 20))
+        zoom = Math.min(Math.max(zoom, 0.01), 20)
+        canvas.value!.zoomToPoint({ x: point.x, y: point.y }, zoom)
         // 更新画布尺寸
         canvasProperties.value.width = Math.round(canvas.value!.getWidth() * zoom)
         canvasProperties.value.height = Math.round(canvas.value!.getHeight() * zoom)
