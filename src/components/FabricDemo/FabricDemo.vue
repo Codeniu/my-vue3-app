@@ -289,7 +289,7 @@ onMounted(async () => {
         const point = canvas.value!.getViewportPoint(opt.e)
         zoom *= 0.999 ** delta
         zoom = Math.min(Math.max(zoom, 0.01), 20)
-        canvas.value!.zoomToPoint({ x: point.x, y: point.y }, zoom)
+        canvas.value!.zoomToPoint({ x: point.x, y: point.y } as any, zoom)
         // 更新画布尺寸
         canvasProperties.value.width = Math.round(canvas.value!.getWidth() * zoom)
         canvasProperties.value.height = Math.round(canvas.value!.getHeight() * zoom)
@@ -339,7 +339,7 @@ onMounted(async () => {
     })
 
     // 监听鼠标事件实现拖拽
-    canvas.value.on('mouse:down', (opt) => {
+    canvas.value.on('mouse:down', (opt: any) => {
       if (isSpacePressed) {
         isDragging = true
         canvas.value!.selection = false
@@ -352,7 +352,7 @@ onMounted(async () => {
 
     canvas.value.on('mouse:move', (opt) => {
       if (isDragging) {
-        const e = opt.e
+        const e: any = opt.e
         const vpt = canvas.value!.viewportTransform!
         const maxPan = 1000 // 最大平移距离
         const newPosX = e.clientX - lastPosX
