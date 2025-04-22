@@ -150,34 +150,20 @@ import {
   updateCanvasProperties,
   deleteSelected,
   updateObjectColor,
+  updateObjectStroke,
+  updateObjectName,
+  toggleFlipX,
+  toggleFlipY,
+  layerElement,
+  updateObjectAngle,
+  rotateLeft,
+  rotateRight,
+  updateObjectSize,
+  updateObjectRadius,
+  updateObjectStrokeWidth,
 } from '../hooks/useCanvas'
 
-import useCanvas from '../hooks/useCanvas'
 import { LayerCommand } from '@/types/elements'
-
-// 更新对象边框颜色
-const updateObjectStroke = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set('stroke', selectedObject.value.stroke)
-    canvas.renderAll()
-  }
-}
-
-// 更新对象名称
-const updateObjectName = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject: any = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.name = selectedObject.value.name
-    canvas.renderAll()
-  }
-}
 
 // 获取对象类型的中文描述
 const getObjectType = (type: string) => {
@@ -188,137 +174,6 @@ const getObjectType = (type: string) => {
     iText: '文本',
   }
   return typeMap[type] || type
-}
-
-// 处理水平翻转
-const toggleFlipX = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set('flipX', !activeObject.flipX)
-    selectedObject.value.flipX = activeObject.flipX
-    canvas.renderAll()
-  }
-}
-
-// 处理垂直翻转
-const toggleFlipY = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set('flipY', !activeObject.flipY)
-    selectedObject.value.flipY = activeObject.flipY
-    canvas.renderAll()
-  }
-}
-
-// 处理层级显示
-const layerElement = (command: LayerCommand) => {
-  const [canvas] = useCanvas()
-
-  if (!canvas) return
-  const handleElement = canvas.getActiveObject()
-  if (!handleElement) return
-  switch (command) {
-    case LayerCommand.UP:
-      canvas.bringObjectForward(handleElement)
-      break
-    case LayerCommand.DOWN:
-      canvas.sendObjectBackwards(handleElement)
-      break
-    case LayerCommand.TOP:
-      canvas.bringObjectToFront(handleElement)
-      break
-    case LayerCommand.BOTTOM:
-      canvas.sendObjectToBack(handleElement)
-      break
-    default:
-      break
-  }
-  canvas.renderAll()
-}
-
-// 更新对象角度
-const updateObjectAngle = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set('angle', Number(selectedObject.value.angle))
-    canvas.renderAll()
-  }
-}
-
-// 向左旋转45度
-const rotateLeft = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    const newAngle = (activeObject.angle || 0) - 45
-    activeObject.set('angle', newAngle)
-    selectedObject.value.angle = newAngle
-    canvas.renderAll()
-  }
-}
-
-// 向右旋转45度
-const rotateRight = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    const newAngle = (activeObject.angle || 0) + 45
-    activeObject.set('angle', newAngle)
-    selectedObject.value.angle = newAngle
-    canvas.renderAll()
-  }
-}
-
-// 更新对象尺寸
-const updateObjectSize = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set({
-      width: Number(selectedObject.value.width),
-      height: Number(selectedObject.value.height),
-    })
-    canvas.renderAll()
-  }
-}
-
-// 更新对象半径
-const updateObjectRadius = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject && activeObject.type === 'circle') {
-    activeObject.set('radius', Number(selectedObject.value.radius))
-    canvas.renderAll()
-  }
-}
-
-// 更新对象边框宽度
-const updateObjectStrokeWidth = () => {
-  const [canvas] = useCanvas()
-
-  if (!canvas || !selectedObject.value) return
-  const activeObject = canvas.getActiveObject()
-  if (activeObject) {
-    activeObject.set('strokeWidth', Number(selectedObject.value.strokeWidth))
-    canvas.renderAll()
-  }
 }
 </script>
 <style scoped>
