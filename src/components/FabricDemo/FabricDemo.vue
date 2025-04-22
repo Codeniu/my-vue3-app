@@ -214,22 +214,15 @@ const initControlStyle = () => {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getItemsByAttr(attr, val) {
-  const objectList = []
+function getItemsByAttr(attr: any, val: any) {
+  if (!canvas.value) return
+  const objectList: any = []
   traverseObjects(canvas.value.getObjects(), attr, val, objectList)
   return objectList
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getItemByAttr(attr, val) {
-  const objectList = []
-  console.log(canvas.value.getObjects())
-  traverseObjects(canvas.value.getObjects(), attr, val, objectList)
-  return objectList[0]
-}
-
 // 按名称获取对象
-function traverseObjects(objects, attr, val, objectList) {
+function traverseObjects(objects: any, attr: any, val: any, objectList: any) {
   for (const i in objects) {
     if (objects[i]['type'] == 'group') {
       traverseObjects(objects[i].getObjects(), attr, val, objectList)
@@ -239,6 +232,7 @@ function traverseObjects(objects, attr, val, objectList) {
   }
 }
 
+// 设置画布
 const setPainter = () => {
   const bg = new fabric.Rect({
     name: 'template',
@@ -251,8 +245,10 @@ const setPainter = () => {
     selectable: false,
   })
 
-  bg.canvas = canvas.value
-  canvas.value.backgroundImage = bg
+  bg.canvas = canvas.value as fabric.Canvas
+  if (canvas.value) {
+    canvas.value.backgroundImage = bg
+  }
 }
 
 onMounted(async () => {
@@ -727,6 +723,7 @@ const toggleFlipY = () => {
 
 // 处理层级显示
 const layerElement = (command: LayerCommand) => {
+  if (!canvas.value) return
   const handleElement = canvas.value.getActiveObject()
   if (!handleElement) return
   switch (command) {
