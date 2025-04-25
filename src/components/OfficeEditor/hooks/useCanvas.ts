@@ -5,6 +5,7 @@ import { useFabricStore } from '@/stores/fabric'
 import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
 import { LayerCommand } from '@/types/elements'
+import { WorkSpaceDrawType } from './useCenter'
 
 let canvas: null | fabric.Canvas = null
 
@@ -48,6 +49,7 @@ const initControlStyle = () => {
 // 设置画布背景
 const setPainter = () => {
   const bg = new fabric.Rect({
+    id: WorkSpaceDrawType,
     name: 'template',
     width: canvasProperties.value.width,
     height: canvasProperties.value.height,

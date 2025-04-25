@@ -7,7 +7,7 @@
     <button @click="addTriangle">三角形</button>
     <button @click="addText">文本</button>
     <button @click="clearCanvas">清空</button>
-    <button @click="exportCanvas">导出</button>
+    <button @click="exportCanvas">导出 {{ Exporting }}</button>
     <button class="import-btn">
       导入
       <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
@@ -29,6 +29,7 @@ import * as fabric from 'fabric'
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { h } from 'vue'
+import useCanvasExport from '../hooks/useCanvasExport'
 
 const fabricStore = useFabricStore()
 const { zoom } = storeToRefs(fabricStore)
@@ -159,20 +160,46 @@ const clearCanvas = () => {
 }
 
 // 导出画布内容
+const { exportImage, exportJSON, Exporting } = useCanvasExport()
 const exportCanvas = () => {
-  const [canvas] = useCanvas()
+  const btnStyle = {
+    margin: '10px',
+    padding: '8px 16px',
+    backgroundColor: '#4096FF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  }
 
+  const [canvas] = useCanvas()
   if (!canvas) return
-  const json = canvas.toJSON()
-  const blob = new Blob([JSON.stringify(json)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'canvas.json'
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+
+  modal.confirm({
+    title: '选择导出类型',
+    content: h('div', [
+      h(
+        'button',
+        {
+          style: btnStyle,
+          onClick: () => {
+            exportJSON()
+          },
+        },
+        'JSON数据',
+      ),
+      h(
+        'button',
+        {
+          style: btnStyle,
+          onClick: () => {
+            exportImage()
+          },
+        },
+        '图片',
+      ),
+    ]),
+  })
 }
 
 // 处理文件导入
