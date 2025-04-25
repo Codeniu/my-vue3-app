@@ -151,6 +151,7 @@ const initMouseWheel = () => {
       const maxPan = 1000 // 最大平移距离
       const newPosX = vpt[4] - opt.e.deltaY
       vpt[4] = Math.min(Math.max(newPosX, -maxPan), maxPan)
+      canvas!.setViewportTransform(vpt)
       canvas!.requestRenderAll()
     } else {
       // 不按任何键时进行上下移动
@@ -158,6 +159,7 @@ const initMouseWheel = () => {
       const maxPan = 1000 // 最大平移距离
       const newPosY = vpt[5] - opt.e.deltaY
       vpt[5] = Math.min(Math.max(newPosY, -maxPan), maxPan)
+      canvas!.setViewportTransform(vpt)
       canvas!.requestRenderAll()
     }
     opt.e.preventDefault()
