@@ -5,7 +5,6 @@ import { useFabricStore } from '@/stores/fabric'
 import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
 import { LayerCommand } from '@/types/elements'
-import { WorkSpaceDrawType } from './useCenter'
 
 let canvas: null | fabric.Canvas = null
 
@@ -49,8 +48,7 @@ const initControlStyle = () => {
 // 设置画布背景
 const setPainter = () => {
   const bg = new fabric.Rect({
-    id: WorkSpaceDrawType,
-    name: 'template',
+    name: 'painter', // 画布背景
     width: canvasProperties.value.width,
     height: canvasProperties.value.height,
     stroke: 'pink',
@@ -60,10 +58,12 @@ const setPainter = () => {
     selectable: false,
   })
 
-  bg.canvas = canvas as fabric.Canvas
-  if (canvas) {
-    canvas.backgroundImage = bg
-  }
+  // bg.canvas = canvas as fabric.Canvas
+  // if (canvas) {
+  //   canvas.backgroundImage = bg
+  // }
+
+  canvas?.add(bg)
 }
 
 // 初始化画布
@@ -267,16 +267,7 @@ const handleObjectSelected = () => {
 
 // 处理取消选中事件
 const handleSelectionCleared = () => {
-  currentColor.value = '#000000'
   selectedObject.value = null
-  // 更新画布属性
-  if (canvas) {
-    canvasProperties.value = {
-      width: canvas.getWidth(),
-      height: canvas.getHeight(),
-      backgroundColor: canvas.backgroundColor as string,
-    }
-  }
 }
 
 // 处理对象修改事件
@@ -358,8 +349,24 @@ const addTextDemo = () => {
 const updateCanvasProperties = () => {
   if (!canvas) return
 
-  setPainter()
+  const painter = getPainter()
+
+  // 如果找到了painter元素，更新其属性
+  if (painter) {
+    painter.set({
+      width: canvasProperties.value.width,
+      height: canvasProperties.value.height,
+      fill: canvasProperties.value.backgroundColor,
+    })
+  }
+
   canvas.renderAll()
+}
+
+// 查找name为painter的元素（画布背景元素）
+const getPainter = () => {
+  if (!canvas) return
+  return canvas.getObjects().find((obj: any) => obj.name === 'painter') as fabric.Rect | undefined
 }
 
 // 清理事件监听
@@ -532,24 +539,26 @@ const updateObjectStrokeWidth = () => {
 }
 
 export {
-  currentColor,
-  selectedObject,
-  canvasProperties,
-  initEditor,
-  updateCanvasProperties,
-  deleteSelected,
-  updateObjectColor,
-  updateObjectStroke,
-  updateObjectName,
-  toggleFlipX,
-  toggleFlipY,
-  layerElement,
-  updateObjectAngle,
-  rotateLeft,
-  rotateRight,
-  updateObjectSize,
-  updateObjectRadius,
-  updateObjectStrokeWidth,
+  currentColor, // 当前选中的颜色值
+  selectedObject, // 当前选中的对象及其属性
+  canvasProperties, // 画布的基本属性配置
+  initEditor, // 初始化编辑器
+  updateCanvasProperties, // 更新画布属性
+  deleteSelected, // 删除选中的对象
+  updateObjectColor, // 更新对象颜色
+  updateObjectStroke, // 更新对象边框颜色
+  updateObjectName, // 更新对象名称
+  toggleFlipX, // 水平翻转对象
+  toggleFlipY, // 垂直翻转对象
+  layerElement, // 处理对象层级显示
+  updateObjectAngle, // 更新对象角度
+  rotateLeft, // 向左旋转45度
+  rotateRight, // 向右旋转45度
+  updateObjectSize, // 更新对象尺寸
+  updateObjectRadius, // 更新对象半径
+  updateObjectStrokeWidth, // 更新对象边框宽度
+  getPainter, // 获取画布背景元素
+  setPainter, // 设置画布背景元素
 }
 
 export default (): [any] => [canvas as any]

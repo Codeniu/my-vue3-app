@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useFabricStore } from '@/stores/fabric'
-import { currentColor } from '../hooks/useCanvas'
+import { currentColor, setPainter } from '../hooks/useCanvas'
 import useCanvas from '../hooks/useCanvas'
 import * as fabric from 'fabric'
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
@@ -152,10 +152,9 @@ const addText = () => {
 // 清空画布
 const clearCanvas = () => {
   const [canvas] = useCanvas()
-
   if (!canvas) return
   canvas.clear()
-  canvas.backgroundColor = '#ffffff'
+  setPainter()
   canvas.renderAll()
 }
 
@@ -177,6 +176,8 @@ const exportCanvas = () => {
 
   modal.confirm({
     title: '选择导出类型',
+    okText: '确定',
+    cancelText: '取消',
     content: h('div', [
       h(
         'button',
@@ -184,6 +185,7 @@ const exportCanvas = () => {
           style: btnStyle,
           onClick: () => {
             exportJSON()
+            Modal.destroyAll()
           },
         },
         'JSON数据',
@@ -194,6 +196,7 @@ const exportCanvas = () => {
           style: btnStyle,
           onClick: () => {
             exportImage()
+            Modal.destroyAll()
           },
         },
         '图片',

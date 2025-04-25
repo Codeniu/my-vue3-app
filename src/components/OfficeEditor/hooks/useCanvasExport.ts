@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import type { ImageFormat } from 'fabric'
 import useCanvas from './useCanvas'
-import useCenter, { WorkSpaceCommonType, WorkSpaceThumbType } from './useCenter'
+import useCenter from './useCenter'
 
 const propertiesToInclude = [
   'id',
@@ -53,12 +53,15 @@ export default () => {
     const [canvas] = useCanvas()
     const { left, top, width, height } = useCenter()
     const zoom = canvas.getZoom()
+    console.log({ left, top, width, height, zoom })
     const viewportTransform = canvas.viewportTransform
 
     const activeObject = canvas.getActiveObject()
     if (activeObject) canvas.discardActiveObject()
     canvas.set({ background: 'rgba(255,255,255,0)' })
     canvas.renderAll()
+
+    // 导出图片的范围为全部元素不会裁剪
 
     const result = canvas.toDataURL({
       multiplier: 1 / zoom, // 调整输出图片的缩放比例
