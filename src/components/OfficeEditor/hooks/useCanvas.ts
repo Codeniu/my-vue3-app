@@ -68,13 +68,15 @@ const initCanvas = async () => {
   await nextTick()
 
   const fabricStore = useFabricStore()
-  const { canvasRef } = storeToRefs(fabricStore)
+  const { canvasRef, wrapperRef } = storeToRefs(fabricStore)
 
   if (!canvasRef.value) return
 
+  const { width, height } = useElementBounding(wrapperRef.value)
+
   canvas = new fabric.Canvas(canvasRef.value, {
-    width: 800,
-    height: 600,
+    width: width.value,
+    height: height.value,
     preserveObjectStacking: true, // 保持对象堆叠顺序
   })
 
@@ -103,7 +105,7 @@ const setCanvasTransform = () => {
   const fabricStore = useFabricStore()
   const { wrapperRef } = storeToRefs(fabricStore)
   const { width, height } = useElementBounding(wrapperRef.value)
-  console.log('width, height', width.value, height.value)
+  // console.log('width, height', width.value, height.value)
   canvas.setDimensions({ width: width.value, height: height.value })
 }
 
@@ -113,12 +115,13 @@ const initEditor = async () => {
 
   addTextDemo()
 
-  // const fabricStore = useFabricStore()
-  // const { wrapperRef } = storeToRefs(fabricStore)
-  // const { width, height } = useElementBounding(wrapperRef.value)
-  // watch([width, height], () => {
-  //   setCanvasTransform()
-  // })
+  // 动态设置编辑器大小
+  const fabricStore = useFabricStore()
+  const { wrapperRef } = storeToRefs(fabricStore)
+  const { width, height } = useElementBounding(wrapperRef.value)
+  watch([width, height], () => {
+    setCanvasTransform()
+  })
 }
 
 // 初始化鼠标滚轮事件

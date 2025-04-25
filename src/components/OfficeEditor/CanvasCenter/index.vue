@@ -22,8 +22,8 @@ onMounted(async () => {
 
 <style scoped>
 .canvas-container {
-  height: 100%;
   width: 100%;
+  height: calc(100vh - 200px);
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
