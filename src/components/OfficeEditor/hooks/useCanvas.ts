@@ -15,10 +15,7 @@ const currentColor = ref('#797979')
  * 当前选中对象的属性集合，包含位置、尺寸、样式等信息
  * 当选中画布上的对象时会更新这些属性
  */
-const selectedObject = ref<any>({
-  fill: '#fff', // 填充颜色
-  stroke: '#fff', // 描边颜色
-})
+const selectedObject = ref<any>(null)
 
 /**
  * 画布的基本属性配置，包含尺寸和背景色
@@ -538,6 +535,12 @@ const updateObjectStrokeWidth = () => {
   }
 }
 
+const getActiveObject = () => {
+  if (!canvas) return
+  const activeObject = canvas.getActiveObject() as any
+  return activeObject
+}
+
 export {
   currentColor, // 当前选中的颜色值
   selectedObject, // 当前选中的对象及其属性
@@ -559,6 +562,7 @@ export {
   updateObjectStrokeWidth, // 更新对象边框宽度
   getPainter, // 获取画布背景元素
   setPainter, // 设置画布背景元素
+  getActiveObject, // 获取当前选中的对象
 }
 
 export default (): [any] => [canvas as any]

@@ -1,7 +1,7 @@
 <template>
   <div class="object-info">
-    <h3>{{ selectedObject ? '元素信息' : '画布信息' }}</h3>
-    <template v-if="selectedObject">
+    <h3>{{ isActiveing ? '元素信息' : '画布信息' }}</h3>
+    <template v-if="isActiveing">
       <div class="info-item">
         <label>类型：</label>
         <span>{{ getObjectType(selectedObject.type) }}</span>
@@ -109,7 +109,7 @@
       </div>
     </template>
 
-    <template v-if="!selectedObject">
+    <template v-if="!isActiveing">
       <div class="info-item">
         <label>画布尺寸：</label>
         <div class="size-inputs">
@@ -144,6 +144,7 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import {
   selectedObject,
   canvasProperties,
@@ -175,6 +176,9 @@ const getObjectType = (type: string) => {
   }
   return typeMap[type] || type
 }
+
+// 计算当前是否选中元素
+const isActiveing = computed(() => selectedObject.value)
 </script>
 <style scoped>
 button {
