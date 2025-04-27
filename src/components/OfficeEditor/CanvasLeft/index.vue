@@ -1,0 +1,116 @@
+<template>
+  <div class="template-container">
+    <button @click="addTemplate('wall')">墙体模板</button>
+    <button @click="addTemplate('room')">房间模板</button>
+    <button @click="addTemplate('circle')">圆形模板</button>
+    <button @click="addTemplate('triangle')">三角形模板</button>
+    <button @click="addTemplate('desk')">
+      <img src="./assets/desk.png" height="40px" width="40px" />
+    </button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import * as fabric from 'fabric'
+import useCanvas from '../hooks/useCanvas'
+
+const emit = defineEmits(['add-template'])
+
+const addTemplate = (type: string) => {
+  const [canvas] = useCanvas()
+  if (!canvas) return
+
+  let template: fabric.Object
+
+  switch (type) {
+    case 'wall':
+      template = new fabric.Rect({
+        left: 100,
+        top: 100,
+        width: 200,
+        height: 20,
+        fill: '#ccc',
+        stroke: '#000',
+        strokeWidth: 1,
+      })
+      break
+    case 'room':
+      fetch('/src/components/OfficeEditor/CanvasLeft/assets/office-1745738390739.json')
+        .then((response) => response.json())
+        .then((jsonData) => {
+          canvas.loadFromJSON(jsonData, () => {
+            canvas.renderAll()
+            emit('add-template', canvas)
+          })
+        })
+        .catch((error) => {
+          console.error('加载房间模板失败:', error)
+        })
+      return
+    case 'circle':
+      template = new fabric.Circle({
+        left: 100,
+        top: 100,
+        radius: 50,
+        fill: '#ccc',
+        stroke: '#000',
+        strokeWidth: 1,
+      })
+      break
+    case 'triangle':
+      template = new fabric.Triangle({
+        left: 100,
+        top: 100,
+        width: 100,
+        height: 100,
+        fill: '#ccc',
+        stroke: '#000',
+        strokeWidth: 1,
+      })
+      break
+    case 'desk':
+      fabric.FabricImage.fromURL('/src/components/OfficeEditor/CanvasLeft/assets/desk.png').then(
+        (img) => {
+          img.set({
+            left: 100,
+            top: 100,
+          })
+          template = img
+          canvas.add(template)
+          canvas.setActiveObject(template)
+          emit('add-template', template)
+        },
+      )
+      return
+    default:
+      return
+  }
+
+  canvas.add(template)
+  canvas.setActiveObject(template)
+  emit('add-template', template)
+}
+</script>
+
+<style scoped>
+.template-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+</style>

@@ -1,7 +1,7 @@
 <template>
   <div class="editor">
     <div class="layout-content flex">
-      <div>CanvasLeft</div>
+      <div><CanvasLeft></CanvasLeft></div>
 
       <div class="layout-content-center">
         <div class="center-header"><CanvasHeader /></div>
@@ -18,6 +18,7 @@
 import CanvasCenter from './CanvasCenter/index.vue'
 import CanvasHeader from './CanvasHeader/index.vue'
 import CanvasRight from './CanvasRight/index.vue'
+import CanvasLeft from './CanvasLeft/index.vue'
 </script>
 
 <style lang="less" scoped>
