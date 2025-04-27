@@ -1,12 +1,34 @@
 import { ref, nextTick, shallowRef, onUnmounted, watch } from 'vue'
 import * as fabric from 'fabric'
-import { FabricObject, Point } from 'fabric'
+import { FabricObject, FabricText, Point, IText, Textbox } from 'fabric'
 import { useFabricStore } from '@/stores/fabric'
 import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
 import { LayerCommand } from '@/types/elements'
+import { defaultControls, initControlStyle, textboxControls } from '../utils/fabricControls'
 
 let canvas: null | fabric.Canvas = null
+
+const mode = ref<'editor' | 'view'>('editor')
+
+const setMode = (newMode: 'editor' | 'view') => {
+  mode.value = newMode
+  if (canvas) {
+    // canvas.selection = newMode === 'editor'
+
+    canvas.forEachObject((obj) => {
+      // obj.selectable = newMode === 'editor'
+      // obj.evented = newMode === 'editor'
+
+      obj.lockMovementX = newMode === 'view'
+      obj.lockMovementY = newMode === 'view'
+      obj.lockScalingX = newMode === 'view'
+      obj.lockScalingY = newMode === 'view'
+      obj.lockRotation = newMode === 'view'
+      obj.lockScalingFlip = newMode === 'view'
+    })
+  }
+}
 
 /** 当前选中的颜色值，用于设置对象的填充色或描边色 */
 const currentColor = ref('#797979')
@@ -27,19 +49,19 @@ const canvasProperties = ref({
   backgroundColor: '#F2F2F2', // 画布背景色
 })
 
-// 初始化控制点样式
-const initControlStyle = () => {
-  FabricObject.ownDefaults.objectCaching = false
-  FabricObject.ownDefaults.borderColor = 'blue'
-  FabricObject.ownDefaults.cornerColor = 'white'
-  FabricObject.ownDefaults.cornerStrokeColor = '#c0c0c0'
-  FabricObject.ownDefaults.borderOpacityWhenMoving = 1
-  FabricObject.ownDefaults.borderScaleFactor = 1
-  FabricObject.ownDefaults.cornerSize = 8
-  FabricObject.ownDefaults.cornerStyle = 'rect'
-  FabricObject.ownDefaults.centeredScaling = false
-  FabricObject.ownDefaults.centeredRotation = true
-  FabricObject.ownDefaults.transparentCorners = false
+// 配置默认属性
+const initConfig = () => {
+  // 设置控制点样式
+  initControlStyle()
+
+  // 设置控制点的默认属性
+  FabricObject.ownDefaults.controls = defaultControls()
+
+  // 设置文本框的默认属性
+  Object.assign(Textbox.ownDefaults, { controls: textboxControls() })
+  Object.assign(IText.ownDefaults, { controls: textboxControls() })
+
+  FabricText.ownDefaults.fontFamily = 'Lobster'
 }
 
 // 设置画布背景
@@ -89,8 +111,8 @@ const initCanvas = async () => {
   // 设置画布背景
   setPainter()
 
-  // 设置控制点样式
-  initControlStyle()
+  // 初始化配置
+  initConfig()
 
   // 监听鼠标滚轮事件
   initMouseWheel()
@@ -142,8 +164,8 @@ const initMouseWheel = () => {
       zoomVal = Math.min(Math.max(zoomVal, 0.01), 20)
       canvas!.zoomToPoint({ x: point.x, y: point.y } as any, zoomVal)
       // 更新画布尺寸
-      canvasProperties.value.width = Math.round(canvas!.getWidth() * zoomVal)
-      canvasProperties.value.height = Math.round(canvas!.getHeight() * zoomVal)
+      // canvasProperties.value.width = Math.round(canvas!.getWidth() * zoomVal)
+      // canvasProperties.value.height = Math.round(canvas!.getHeight() * zoomVal)
 
       // 更新缩放比例
       zoom.value = zoomVal
@@ -566,6 +588,8 @@ export {
   getPainter, // 获取画布背景元素
   setPainter, // 设置画布背景元素
   getActiveObject, // 获取当前选中的对象
+  setMode,
+  mode,
 }
 
 export default (): [any] => [canvas as any]
