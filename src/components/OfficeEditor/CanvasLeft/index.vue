@@ -12,11 +12,12 @@
 
 <script setup lang="ts">
 import * as fabric from 'fabric'
-import useCanvas from '../hooks/useCanvas'
+import useCanvas, { setCanvasTransform } from '../hooks/useCanvas'
+import { desk } from './templates'
 
 const emit = defineEmits(['add-template'])
 
-const addTemplate = (type: string) => {
+const addTemplate = async (type: string) => {
   const [canvas] = useCanvas()
   if (!canvas) return
 
@@ -35,17 +36,10 @@ const addTemplate = (type: string) => {
       })
       break
     case 'room':
-      fetch('/src/components/OfficeEditor/CanvasLeft/assets/office-1745738390739.json')
-        .then((response) => response.json())
-        .then((jsonData) => {
-          canvas.loadFromJSON(jsonData, () => {
-            canvas.renderAll()
-            emit('add-template', canvas)
-          })
-        })
-        .catch((error) => {
-          console.error('加载房间模板失败:', error)
-        })
+      await canvas.loadFromJSON(desk)
+      canvas.renderAll()
+      setCanvasTransform()
+      emit('add-template', canvas)
       return
     case 'circle':
       template = new fabric.Circle({

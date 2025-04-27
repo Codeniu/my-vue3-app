@@ -17,7 +17,10 @@
         />
       </div>
       <div class="info-item">
-        <button class="delete-btn" @click="deleteSelected">删除元素</button>
+        <div class="action-buttons">
+          <button class="delete-btn" @click="deleteSelected">删除元素</button>
+          <button class="export-btn" @click="exportSelectedObject">导出元素</button>
+        </div>
       </div>
       <div class="info-item">
         <label>位置：</label>
@@ -163,8 +166,15 @@ import {
   updateObjectRadius,
   updateObjectStrokeWidth,
 } from '../hooks/useCanvas'
-
 import { LayerCommand } from '@/types/elements'
+import useCanvasExport from '../hooks/useCanvasExport'
+
+const { exportActive } = useCanvasExport()
+
+// 导出选中元素的JSON数据
+const exportSelectedObject = () => {
+  exportActive()
+}
 
 // 获取对象类型的中文描述
 const getObjectType = (type: string) => {
@@ -249,14 +259,28 @@ button:hover {
   background-color: #2196f3;
 }
 
-.delete-btn {
-  width: 100%;
-  background-color: #f44336;
+.action-buttons {
+  display: flex;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.delete-btn {
+  flex: 1;
+  background-color: #f44336;
 }
 
 .delete-btn:hover {
   background-color: #d32f2f;
+}
+
+.export-btn {
+  flex: 1;
+  background-color: #2196f3;
+}
+
+.export-btn:hover {
+  background-color: #1976d2;
 }
 
 .import-btn {

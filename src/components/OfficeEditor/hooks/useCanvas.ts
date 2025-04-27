@@ -326,7 +326,7 @@ const addTextDemo = () => {
   const text = new fabric.Textbox(textValue, {
     originX: 'center',
     splitByGrapheme: true,
-    width: 200,
+    width: 260,
     top: 20,
     styles: fabric.util.stylesFromArray(
       [
@@ -589,6 +589,7 @@ export {
   setPainter, // 设置画布背景元素
   getActiveObject, // 获取当前选中的对象
   setMode,
+  setCanvasTransform,
   mode,
 }
 

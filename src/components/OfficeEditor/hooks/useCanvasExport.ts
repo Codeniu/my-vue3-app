@@ -102,9 +102,28 @@ export default () => {
     URL.revokeObjectURL(url)
   }
 
+  // 导出当前选中的元素
+  const exportActive = () => {
+    const [canvas] = useCanvas()
+    const activeObject = canvas.getActiveObject()
+    if (activeObject) {
+      const serializer = activeObject.toObject(propertiesToInclude)
+      const blob = new Blob([JSON.stringify(serializer)])
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = activeObject.name ? `${activeObject.name}.json` : `el-${Date.now()}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    }
+  }
+
   return {
     exportImage,
     exportJSON,
     Exporting,
+    exportActive,
   }
 }
