@@ -6,11 +6,59 @@ import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
 import { LayerCommand } from '@/types/elements'
 import { defaultControls, initControlStyle, textboxControls } from '../utils/fabricControls'
+import { calculateDiff } from './useDiff'
 
 let canvas: null | fabric.Canvas = null
 
-const mode = ref<'editor' | 'view'>('editor')
+// 操作历史栈配置
+const MAX_HISTORY_LENGTH = 20 // 最大历史记录数
+const historyStack = ref<Array<{ state: any; diff: any }>>([]) // 存储状态和差异
+const currentHistoryIndex = ref(-1)
 
+// 保存当前状态到历史栈
+const saveToHistory = () => {
+  if (!canvas) return
+
+  // 移除当前索引之后的所有历史记录
+  if (currentHistoryIndex.value < historyStack.value.length - 1) {
+    historyStack.value = historyStack.value.slice(0, currentHistoryIndex.value + 1)
+  }
+
+  const currentState = canvas.toJSON()
+  const previousState =
+    currentHistoryIndex.value >= 0
+      ? historyStack.value[currentHistoryIndex.value].state
+      : { objects: [] }
+
+  // 计算差异并保存
+  const diff = calculateDiff(previousState, currentState)
+  historyStack.value.push({ state: currentState, diff })
+  currentHistoryIndex.value++
+  console.log('historyStack.value', historyStack.value)
+  console.log('currentHistoryIndex.value', currentHistoryIndex.value)
+  // 限制历史栈大小
+  if (historyStack.value.length > MAX_HISTORY_LENGTH) {
+    historyStack.value.shift()
+    currentHistoryIndex.value--
+  }
+}
+
+// 撤销操作
+const undo = () => {
+  if (!canvas || currentHistoryIndex.value <= 0) return
+
+  currentHistoryIndex.value--
+  const previousState = historyStack.value[currentHistoryIndex.value].state
+
+  // 应用状态
+  canvas.loadFromJSON(previousState, () => {
+    canvas?.renderAll()
+    setCanvasTransform()
+  })
+}
+
+// 模式切换
+const mode = ref<'editor' | 'view'>('editor')
 const setMode = (newMode: 'editor' | 'view') => {
   mode.value = newMode
   if (canvas) {
@@ -107,6 +155,9 @@ const initCanvas = async () => {
   canvas.on('selection:updated', handleObjectSelected)
   canvas.on('selection:cleared', handleSelectionCleared)
   canvas.on('object:modified', handleObjectModified)
+
+  // canvas.on('object:added', saveToHistory)
+  // canvas.on('object:removed', saveToHistory)
 
   // 设置画布背景
   setPainter()
@@ -264,6 +315,7 @@ const initDragCanvas = () => {
 
 // 处理对象选中事件
 const handleObjectSelected = () => {
+  console.log('handleObjectSelected')
   if (!canvas) return
 
   const activeObject = canvas.getActiveObject() as any
@@ -285,6 +337,8 @@ const handleObjectSelected = () => {
       angle: activeObject.angle || 0,
     }
   }
+
+  saveToHistory()
 }
 
 // 处理取消选中事件
@@ -295,6 +349,9 @@ const handleSelectionCleared = () => {
 // 处理对象修改事件
 const handleObjectModified = (e: any) => {
   if (!canvas) return
+
+  saveToHistory()
+
   const modifiedObject = e.target
   if (modifiedObject && selectedObject.value) {
     // 设置统一的边框宽度
@@ -591,6 +648,7 @@ export {
   setMode,
   setCanvasTransform,
   mode,
+  undo, // 撤销操作
 }
 
 export default (): [any] => [canvas as any]
