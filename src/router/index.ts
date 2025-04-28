@@ -23,6 +23,13 @@ const router = createRouter({
       name: 'office-editor',
       component: () => import('../views/OfficeEditorView.vue'),
     },
+
+    {
+      path: '/office-viewer',
+      name: 'office-viewer',
+      component: () => import('../views/OfficeEditorViewer.vue'),
+    },
+
     {
       path: '/fabric-demo',
       name: 'fabric-demo',

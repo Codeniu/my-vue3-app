@@ -3,8 +3,12 @@
     <div class="layout-content">
       <!-- <MobileThumb class="layout-mobile-thumb" />  -->
       <div class="layout-mobile-center">
-        <div class="center-header">header</div>
-        <div class="center-body">body</div>
+        <div class="center-header">
+          <CanvasHeader />
+        </div>
+        <div class="center-body">
+          <CanvasCenter />
+        </div>
         <div class="center-footer">footer</div>
       </div>
     </div>
@@ -14,7 +18,10 @@
   </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import CanvasCenter from './CanvasCenter/index.vue'
+import CanvasHeader from './CanvasHeader/index.vue'
+</script>
 
 <style lang="less" scoped>
 .yft-design {

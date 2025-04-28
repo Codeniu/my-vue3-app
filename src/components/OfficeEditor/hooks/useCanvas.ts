@@ -16,6 +16,7 @@ const historyStack = ref<Array<{ state: any; diff: any }>>([]) // 存储状态�
 const currentHistoryIndex = ref(-1)
 
 // 保存当前状态到历史栈
+// 待优化
 const saveToHistory = () => {
   if (!canvas) return
 
@@ -156,9 +157,6 @@ const initCanvas = async () => {
   canvas.on('selection:cleared', handleSelectionCleared)
   canvas.on('object:modified', handleObjectModified)
 
-  // canvas.on('object:added', saveToHistory)
-  // canvas.on('object:removed', saveToHistory)
-
   // 设置画布背景
   setPainter()
 
@@ -186,7 +184,7 @@ const setCanvasTransform = () => {
 const initEditor = async () => {
   await initCanvas()
 
-  addTextDemo()
+  // addTextDemo()
 
   // 动态设置编辑器大小
   const fabricStore = useFabricStore()
@@ -322,6 +320,7 @@ const handleObjectSelected = () => {
 
   if (activeObject) {
     selectedObject.value = {
+      ...activeObject,
       type: activeObject.type,
       left: activeObject.left,
       top: activeObject.top,
@@ -338,7 +337,8 @@ const handleObjectSelected = () => {
     }
   }
 
-  saveToHistory()
+  // 记录操作步骤
+  // saveToHistory()
 }
 
 // 处理取消选中事件
@@ -350,7 +350,8 @@ const handleSelectionCleared = () => {
 const handleObjectModified = (e: any) => {
   if (!canvas) return
 
-  saveToHistory()
+  // 记录操作步骤
+  // saveToHistory()
 
   const modifiedObject = e.target
   if (modifiedObject && selectedObject.value) {
@@ -500,7 +501,6 @@ const updateObjectName = () => {
   const activeObject: any = canvas.getActiveObject()
   if (activeObject) {
     activeObject.name = selectedObject.value.name
-    canvas.renderAll()
   }
 }
 

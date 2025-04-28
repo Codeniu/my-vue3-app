@@ -5,7 +5,7 @@
     <button @click="addTemplate('circle')">圆形模板</button>
     <button @click="addTemplate('triangle')">三角形模板</button>
     <button @click="addTemplate('desk')">
-      <img src="./assets/desk.png" height="40px" width="40px" />
+      <img src="./assets/desk.svg" height="40px" width="40px" />
     </button>
   </div>
 </template>
@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import * as fabric from 'fabric'
 import useCanvas, { setCanvasTransform } from '../hooks/useCanvas'
-import { desk } from './templates'
+import { deskGroup } from './templates'
 
 const emit = defineEmits(['add-template'])
 
@@ -36,7 +36,7 @@ const addTemplate = async (type: string) => {
       })
       break
     case 'room':
-      await canvas.loadFromJSON(desk)
+      await canvas.loadFromJSON(deskGroup)
       canvas.renderAll()
       setCanvasTransform()
       emit('add-template', canvas)
@@ -63,18 +63,18 @@ const addTemplate = async (type: string) => {
       })
       break
     case 'desk':
-      fabric.FabricImage.fromURL('/src/components/OfficeEditor/CanvasLeft/assets/desk.png').then(
-        (img) => {
-          img.set({
-            left: 100,
-            top: 100,
-          })
-          template = img
-          canvas.add(template)
-          canvas.setActiveObject(template)
-          emit('add-template', template)
-        },
-      )
+      fabric.FabricImage.fromURL(
+        '/src/components/OfficeEditor/CanvasLeft/assets/desk-no-shadow.svg',
+      ).then((img) => {
+        img.set({
+          left: 100,
+          top: 100,
+        })
+        template = img
+        canvas.add(template)
+        canvas.setActiveObject(template)
+        emit('add-template', template)
+      })
       return
     default:
       return

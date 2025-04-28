@@ -125,5 +125,6 @@ export default () => {
     exportJSON,
     Exporting,
     exportActive,
+    getJSONData,
   }
 }

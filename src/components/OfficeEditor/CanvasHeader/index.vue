@@ -177,7 +177,7 @@ const clearCanvas = () => {
 }
 
 // 导出画布内容
-const { exportImage, exportJSON, Exporting } = useCanvasExport()
+const { exportImage, exportJSON, Exporting, getJSONData } = useCanvasExport()
 const exportCanvas = () => {
   const btnStyle = {
     margin: '10px',
@@ -272,7 +272,7 @@ const handlePreview = () => {
   const [canvas] = useCanvas()
 
   if (!canvas) return
-  const json = canvas.toJSON()
+  const json = getJSONData()
   showConfirm(JSON.stringify(json))
 }
 </script>

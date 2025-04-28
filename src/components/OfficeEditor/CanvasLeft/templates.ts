@@ -1,3 +1,3 @@
-import desk from './assets/office-1745738390739.json'
+import deskGroup from './assets/desk-group.json'
 
-export { desk }
+export { deskGroup }
