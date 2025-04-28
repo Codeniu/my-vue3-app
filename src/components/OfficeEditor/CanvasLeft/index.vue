@@ -14,6 +14,7 @@
 import * as fabric from 'fabric'
 import useCanvas, { setCanvasTransform } from '../hooks/useCanvas'
 import { deskGroup } from './templates'
+import { nonid } from '@/utils/common'
 
 const emit = defineEmits(['add-template'])
 
@@ -62,11 +63,14 @@ const addTemplate = async (type: string) => {
         strokeWidth: 1,
       })
       break
+    // 工位基本单元
     case 'desk':
       fabric.FabricImage.fromURL(
         '/src/components/OfficeEditor/CanvasLeft/assets/desk-no-shadow.svg',
       ).then((img) => {
         img.set({
+          id: nonid(8), // 生成id
+          ownType: 'desk',
           left: 100,
           top: 100,
         })

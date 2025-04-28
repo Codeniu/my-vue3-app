@@ -5,7 +5,8 @@ import useCenter from './useCenter'
 
 const propertiesToInclude = [
   'id',
-  'name',
+  'name', // 内置属性 工位使用人姓名
+  'ownType', // 内置属性 'desk'  标识该对象为一个工位
   'layer',
   'isShow',
   'editable',
