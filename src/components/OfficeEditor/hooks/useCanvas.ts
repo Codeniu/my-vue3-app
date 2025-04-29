@@ -149,6 +149,7 @@ const initCanvas = async () => {
     width: width.value,
     height: height.value,
     preserveObjectStacking: true, // 保持对象堆叠顺序
+    includeDefaultValues: false, // 是否包含默认值,为false时，不会将默认值添加到对象中
   })
 
   // 监听对象选择事件

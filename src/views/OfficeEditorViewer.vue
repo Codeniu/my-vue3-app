@@ -51,6 +51,8 @@
             <h3>工位总数量16个，空闲7个，使用中7个</h3>
 
             <h3>工位申请信息：待审批2条，已审批20条</h3>
+
+            <Button @click="exportJSON">导出</Button>
           </div>
         </template>
       </div>
@@ -61,7 +63,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, computed } from 'vue'
 import * as fabric from 'fabric'
-import { Form, FormItem, Input, Select } from 'ant-design-vue'
+import { Form, FormItem, Input, Select, Button } from 'ant-design-vue'
 
 import OfficeViewer from '@/components/OfficeEditor/computer-viewer.vue'
 import { deskGroup } from '@/components/OfficeEditor/CanvasLeft/templates'
@@ -71,6 +73,8 @@ import useCanvas, {
   selectedObject,
 } from '@/components/OfficeEditor/hooks/useCanvas'
 import { nonid } from '@/utils/common'
+import useCanvasExport from '@/components/OfficeEditor/hooks/useCanvasExport'
+const { exportJSON } = useCanvasExport()
 
 // 更新对象名称
 const updateObjectName = () => {

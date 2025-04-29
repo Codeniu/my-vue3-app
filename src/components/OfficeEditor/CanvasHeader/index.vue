@@ -8,7 +8,7 @@
     <button @click="addText">文本</button>
     <button @click="clearCanvas">清空</button>
     <button @click="undo" title="撤销 (Ctrl+Z)">撤销</button>
-    <button @click="exportCanvas">导出 {{ Exporting }}</button>
+    <button @click="exportCanvas">导出</button>
     <button class="import-btn">
       导入
       <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
@@ -177,7 +177,7 @@ const clearCanvas = () => {
 }
 
 // 导出画布内容
-const { exportImage, exportJSON, Exporting, getJSONData } = useCanvasExport()
+const { exportImage, exportJSON, getJSONData } = useCanvasExport()
 const exportCanvas = () => {
   const btnStyle = {
     margin: '10px',
