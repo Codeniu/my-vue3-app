@@ -4,7 +4,6 @@ import { FabricObject, FabricText, IText, Textbox } from 'fabric'
 import { useFabricStore } from '@/stores/fabric'
 import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
-import { LayerCommand } from '@/types/elements'
 import { defaultControls, initControlStyle, textboxControls } from '../utils/fabricControls'
 import { initGuideLines, hideGuideLines } from './useSnap'
 import { saveToHistory } from './useUndo'
@@ -69,6 +68,7 @@ const initConfig = () => {
 // 设置画布背景
 const setPainter = () => {
   const bg = new fabric.Rect({
+    id: 'PAINTER',
     name: 'painter', // 画布背景
     width: canvasProperties.value.width,
     height: canvasProperties.value.height,
@@ -270,7 +270,27 @@ const initDragCanvas = () => {
 
 const handleObjectCreated = () => {
   console.log('on created')
+  if (!canvas) return
 
+  const activeObject = canvas.getActiveObject() as any
+  if (activeObject) {
+    selectedObject.value = {
+      ...activeObject,
+      type: activeObject.type,
+      left: activeObject.left,
+      top: activeObject.top,
+      width: activeObject?.cacheWidth || activeObject.width,
+      height: activeObject?.cacheHeight || activeObject.height,
+      radius: activeObject.type === 'circle' ? (activeObject as fabric.Circle).radius : undefined,
+      name: activeObject.name || '',
+      fill: (activeObject.get('fill') as string) || '#000000',
+      stroke: (activeObject.get('stroke') as string) || '#000000',
+      strokeWidth: activeObject.strokeWidth || 1,
+      flipX: activeObject.flipX || false,
+      flipY: activeObject.flipY || false,
+      angle: activeObject.angle || 0,
+    }
+  }
   saveToHistory()
 }
 
@@ -490,30 +510,6 @@ const toggleFlipY = () => {
   }
 }
 
-// 处理层级显示
-const layerElement = (command: LayerCommand) => {
-  if (!canvas) return
-  const handleElement = canvas.getActiveObject()
-  if (!handleElement) return
-  switch (command) {
-    case LayerCommand.UP:
-      canvas.bringObjectForward(handleElement)
-      break
-    case LayerCommand.DOWN:
-      canvas.sendObjectBackwards(handleElement)
-      break
-    case LayerCommand.TOP:
-      canvas.bringObjectToFront(handleElement)
-      break
-    case LayerCommand.BOTTOM:
-      canvas.sendObjectToBack(handleElement)
-      break
-    default:
-      break
-  }
-  canvas.renderAll()
-}
-
 // 更新对象角度
 const updateObjectAngle = () => {
   if (!canvas || !selectedObject.value) return
@@ -599,7 +595,6 @@ export {
   updateObjectName, // 更新对象名称
   toggleFlipX, // 水平翻转对象
   toggleFlipY, // 垂直翻转对象
-  layerElement, // 处理对象层级显示
   updateObjectAngle, // 更新对象角度
   rotateLeft, // 向左旋转45度
   rotateRight, // 向右旋转45度

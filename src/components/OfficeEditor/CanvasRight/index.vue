@@ -158,7 +158,6 @@ import {
   updateObjectName,
   toggleFlipX,
   toggleFlipY,
-  layerElement,
   updateObjectAngle,
   rotateLeft,
   rotateRight,
@@ -166,10 +165,12 @@ import {
   updateObjectRadius,
   updateObjectStrokeWidth,
 } from '../hooks/useCanvas'
+import useHandleTools from '../hooks/useHandleTools'
 import { LayerCommand } from '@/types/elements'
 import useCanvasExport from '../hooks/useCanvasExport'
 
 const { exportActive } = useCanvasExport()
+const { layerElement } = useHandleTools()
 
 // 导出选中元素的JSON数据
 const exportSelectedObject = () => {
