@@ -1,12 +1,13 @@
-import { ref, nextTick, shallowRef, onUnmounted, watch } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import * as fabric from 'fabric'
-import { FabricObject, FabricText, Point, IText, Textbox } from 'fabric'
+import { FabricObject, FabricText, IText, Textbox } from 'fabric'
 import { useFabricStore } from '@/stores/fabric'
 import { storeToRefs } from 'pinia'
 import { useElementBounding } from '@vueuse/core'
 import { LayerCommand } from '@/types/elements'
 import { defaultControls, initControlStyle, textboxControls } from '../utils/fabricControls'
-import { calculateDiff } from './useDiff'
+import { calculateDiff } from '../utils/useDiff'
+import { initGuideLines, hideGuideLines } from './useSnap'
 
 let canvas: null | fabric.Canvas = null
 
@@ -169,6 +170,9 @@ const initCanvas = async () => {
 
   // 初始化拖拽功能
   initDragCanvas()
+
+  // 初始化辅助线
+  initGuideLines(canvas)
 }
 
 // 更新视图区长宽
@@ -375,6 +379,9 @@ const handleObjectModified = (e: any) => {
       flipY: modifiedObject.flipY || false,
     }
   }
+
+  // 隐藏辅助线
+  hideGuideLines()
 }
 
 // 初始化模板

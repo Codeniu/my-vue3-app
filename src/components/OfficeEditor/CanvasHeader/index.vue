@@ -7,13 +7,19 @@
     <button @click="addTriangle">三角形</button>
     <button @click="addText">文本</button>
     <button @click="clearCanvas">清空</button>
-    <button @click="undo" title="撤销 (Ctrl+Z)">撤销</button>
+    <!-- <button @click="undo" title="撤销 (Ctrl+Z)">撤销</button> -->
     <button @click="exportCanvas">导出</button>
     <button class="import-btn">
       导入
       <input type="file" accept=".json" @change="handleFileImport" class="file-input" />
     </button>
     <button @click="handlePreview">预览JSON</button>
+
+    <!-- 吸附功能控制按钮 -->
+    <button @click="toggleSnap" title="元素吸附">吸附{{ snapEnabled ? '✓' : '' }}</button>
+
+    <!-- 辅助线显示控制按钮 -->
+    <button @click="toggleGuides" title="显示辅助线">辅助线{{ showGuides ? '✓' : '' }}</button>
 
     <span>{{ zoom }}</span>
   </div>
@@ -24,9 +30,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useFabricStore } from '@/stores/fabric'
-import { currentColor, setPainter, undo } from '../hooks/useCanvas'
+import { currentColor, setPainter } from '../hooks/useCanvas'
+import { toggleSnap, toggleGuides, snapEnabled, showGuides } from '../hooks/useSnap'
 import useCanvas from '../hooks/useCanvas'
-import { onMounted, onUnmounted } from 'vue'
 import * as fabric from 'fabric'
 import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
@@ -37,20 +43,20 @@ const fabricStore = useFabricStore()
 const { zoom } = storeToRefs(fabricStore)
 
 // 添加快捷键监听
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.ctrlKey && e.key === 'z') {
-    e.preventDefault()
-    undo()
-  }
-}
+// const handleKeyDown = (e: KeyboardEvent) => {
+//   if (e.ctrlKey && e.key === 'z') {
+//     e.preventDefault()
+//     undo()
+//   }
+// }
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown)
-})
+// onMounted(() => {
+//   window.addEventListener('keydown', handleKeyDown)
+// })
 
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown)
-})
+// onUnmounted(() => {
+//   window.removeEventListener('keydown', handleKeyDown)
+// })
 
 // 添加矩形
 const addRect = () => {

@@ -1,5 +1,16 @@
-import { Object as FabricObject, Group as OriginGroup, util, Point } from 'fabric'
+import { FabricObject, util, Point } from 'fabric'
 
+/**
+ * @description 从 fabric 对象数组中计算边界框
+ * @param {FabricObject[]} objects - fabric 对象数组
+ * @param {boolean} [ignoreOffset] - 是否忽略偏移量
+ * @returns {{
+ *   centerX: number,
+ *   centerY: number,
+ *   width: number,
+ *   height: number
+ * } | null} 返回边界框的中心点坐标和尺寸，如果数组为空则返回 null
+ */
 export const getObjectsBoundingBox = (objects: FabricObject[], ignoreOffset?: boolean) => {
   if (objects.length === 0) {
     return null
