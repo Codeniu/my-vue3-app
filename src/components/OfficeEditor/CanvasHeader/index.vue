@@ -7,7 +7,7 @@
     <button @click="addTriangle">三角形</button>
     <button @click="addText">文本</button>
     <button @click="clearCanvas">清空</button>
-    <!-- <button @click="undo" title="撤销 (Ctrl+Z)">撤销</button> -->
+    <button @click="undo" title="撤销 (Ctrl+Z)">撤销</button>
     <button @click="exportCanvas">导出</button>
     <button class="import-btn">
       导入
@@ -28,35 +28,38 @@
 </template>
 
 <script setup lang="ts">
+import { h, onMounted, onUnmounted } from 'vue'
+import * as fabric from 'fabric'
+import { Modal } from 'ant-design-vue'
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
+
 import { storeToRefs } from 'pinia'
 import { useFabricStore } from '@/stores/fabric'
+
+import useCanvas from '../hooks/useCanvas'
+import { undo } from '../hooks/useUndo'
+import useCanvasExport from '../hooks/useCanvasExport'
 import { currentColor, setPainter } from '../hooks/useCanvas'
 import { toggleSnap, toggleGuides, snapEnabled, showGuides } from '../hooks/useSnap'
-import useCanvas from '../hooks/useCanvas'
-import * as fabric from 'fabric'
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue'
-import { Modal } from 'ant-design-vue'
-import { h } from 'vue'
-import useCanvasExport from '../hooks/useCanvasExport'
 
 const fabricStore = useFabricStore()
 const { zoom } = storeToRefs(fabricStore)
 
 // 添加快捷键监听
-// const handleKeyDown = (e: KeyboardEvent) => {
-//   if (e.ctrlKey && e.key === 'z') {
-//     e.preventDefault()
-//     undo()
-//   }
-// }
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.ctrlKey && e.key === 'z') {
+    e.preventDefault()
+    undo()
+  }
+}
 
-// onMounted(() => {
-//   window.addEventListener('keydown', handleKeyDown)
-// })
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
 
-// onUnmounted(() => {
-//   window.removeEventListener('keydown', handleKeyDown)
-// })
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 
 // 添加矩形
 const addRect = () => {

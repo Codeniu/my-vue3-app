@@ -20,6 +20,7 @@ const initGuideLines = (canvas: fabric.Canvas) => {
 
   // 创建水平辅助线
   horizontalGuide = new fabric.Line([0, 0, 0, 0], {
+    name: 'modifyPolyline',
     stroke: '#00aeff',
     strokeWidth: 1,
     selectable: false,
@@ -30,6 +31,7 @@ const initGuideLines = (canvas: fabric.Canvas) => {
 
   // 创建垂直辅助线
   verticalGuide = new fabric.Line([0, 0, 0, 0], {
+    name: 'modifyPolyline',
     stroke: '#00aeff',
     strokeWidth: 1,
     selectable: false,
