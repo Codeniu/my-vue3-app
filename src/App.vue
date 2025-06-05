@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
+import { isMobile } from '@/utils/common'
 </script>
 
 <template>
-  <div class="app-container">
+  <div class="app-container" v-if="!isMobile()">
     <header class="side-nav">
       <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="80" height="80" />
       <nav>
         <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/about">AI 对话</RouterLink>
         <RouterLink to="/office-editor">工位编辑</RouterLink>
         <RouterLink to="/office-viewer">工位查看</RouterLink>
+        <RouterLink to="/office-viewer-h5">工位查看-h5</RouterLink>
         <RouterLink to="/fabric-demo">Fabric Demo</RouterLink>
+        <RouterLink to="/tree">tree</RouterLink>
       </nav>
     </header>
     <main class="main-content">
       <RouterView />
     </main>
+  </div>
+
+  <div v-else>
+    <RouterView />
   </div>
 </template>
 

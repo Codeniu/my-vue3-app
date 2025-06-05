@@ -1,26 +1,16 @@
 <template>
   <div class="yft-design">
     <div class="layout-content">
-      <!-- <MobileThumb class="layout-mobile-thumb" />  -->
       <div class="layout-mobile-center">
-        <div class="center-header">
-          <CanvasHeader />
-        </div>
-        <div class="center-body">
-          <CanvasCenter />
-        </div>
+        <CanvasCenter class="center-body" />
         <div class="center-footer">footer</div>
       </div>
-    </div>
-    <div class="layout-barcode">
-      <svg id="barcode"></svg>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import CanvasCenter from './CanvasCenter/index.vue'
-import CanvasHeader from './CanvasHeader/index.vue'
 </script>
 
 <style lang="less" scoped>
@@ -72,9 +62,5 @@ import CanvasHeader from './CanvasHeader/index.vue'
     display: flex;
     justify-content: space-between;
   }
-}
-.layout-barcode {
-  position: absolute;
-  top: -200px;
 }
 </style>

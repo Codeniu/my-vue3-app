@@ -31,6 +31,12 @@ const router = createRouter({
     },
 
     {
+      path: '/office-viewer-h5',
+      name: 'office-viewer-h5',
+      component: () => import('../views/office-editor-viewer-h5.vue'),
+    },
+
+    {
       path: '/fabric-demo',
       name: 'fabric-demo',
       component: FabricDemoView,

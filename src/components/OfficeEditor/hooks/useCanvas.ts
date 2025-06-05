@@ -228,6 +228,7 @@ const initDragCanvas = () => {
 
   // 监听鼠标事件实现拖拽
   canvas.on('mouse:down', (opt: any) => {
+    console.log('on mouse down', opt)
     if (isSpacePressed) {
       isDragging = true
       canvas!.selection = false
@@ -245,6 +246,7 @@ const initDragCanvas = () => {
       const maxPan = 1000 // 最大平移距离
       const newPosX = e.clientX - lastPosX
       const newPosY = e.clientY - lastPosY
+      console.log('on mouse move', opt, newPosX, newPosY)
 
       // 限制平移范围
       vpt[4] = Math.min(Math.max(vpt[4] + newPosX, -maxPan), maxPan)
@@ -259,6 +261,7 @@ const initDragCanvas = () => {
 
   canvas.on('mouse:up', () => {
     isDragging = false
+    console.log('on mouse up')
     canvas!.selection = true
     if (isSpacePressed) {
       canvas!.defaultCursor = 'grab'
