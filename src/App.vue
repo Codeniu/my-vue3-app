@@ -14,7 +14,7 @@ import { isMobile } from '@/utils/common'
         <RouterLink to="/office-viewer">工位查看</RouterLink>
         <RouterLink to="/office-viewer-h5">工位查看-h5</RouterLink>
         <RouterLink to="/fabric-demo">Fabric Demo</RouterLink>
-        <RouterLink to="/tree">tree</RouterLink>
+        <RouterLink to="/tree-demo">tree demo</RouterLink>
       </nav>
     </header>
     <main class="main-content">

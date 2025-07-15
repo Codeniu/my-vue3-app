@@ -41,6 +41,12 @@ const router = createRouter({
       name: 'fabric-demo',
       component: FabricDemoView,
     },
+
+    {
+      path: '/tree-demo',
+      name: 'tree-demo',
+      component: () => import('../views/tree-demo.vue'),
+    },
   ],
 })
 
