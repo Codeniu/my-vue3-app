@@ -1,6 +1,16 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { computed } from 'vue'
 import { isMobile } from '@/utils/common'
+
+const router = useRouter()
+
+const filteredRoutes = computed(() => {
+  return router.options.routes.filter(
+    (route) =>
+      route.name && route.meta?.showInNav !== false && !['home'].includes(route.name as string),
+  )
+})
 </script>
 
 <template>
@@ -8,13 +18,9 @@ import { isMobile } from '@/utils/common'
     <header class="side-nav">
       <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="80" height="80" />
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">AI 对话</RouterLink>
-        <RouterLink to="/office-editor">工位编辑</RouterLink>
-        <RouterLink to="/office-viewer">工位查看</RouterLink>
-        <RouterLink to="/office-viewer-h5">工位查看-h5</RouterLink>
-        <RouterLink to="/fabric-demo">Fabric Demo</RouterLink>
-        <RouterLink to="/tree-demo">tree demo</RouterLink>
+        <RouterLink v-for="route in filteredRoutes" :key="route.path" :to="route.path">
+          {{ route.meta?.title || route.name }}
+        </RouterLink>
       </nav>
     </header>
     <main class="main-content">

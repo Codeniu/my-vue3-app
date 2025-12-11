@@ -13,6 +13,8 @@
     <div ref="chart" class="chart-container"></div>
 
     <LineBar />
+
+    <pieDemo1 />
   </div>
 </template>
 
@@ -20,6 +22,7 @@
 import { ref, onMounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import LineBar from './echarts-demo/line-bar.vue'
+import pieDemo1 from './echarts-demo/pie-demo1.vue'
 
 const options = ['全省', '公司本部', '直属单位', '地市公司']
 const selectedOption = ref('全省')
