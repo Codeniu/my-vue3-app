@@ -82,6 +82,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/selection-demo',
+      name: 'selection-demo',
+      component: () => import('../views/SelectionDemoView.vue'),
+      meta: {
+        showInNav: true,
+        title: '选择组件演示',
+      },
+    },
+    {
       path: '/particle-effect',
       name: 'particle-effect',
       component: () => import('../views/ParticleEffectView.vue'),
