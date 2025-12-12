@@ -8,10 +8,9 @@
         :prizes="prizes"
         :itemHeight="48"
         :visibleCount="5"
-        :baseSpeedPerMs="0.55"
+        :baseSpeedPerMs="1.55"
         :accelDuration="600"
         :minSpinDuration="3600"
-        :repeatTimes="100"
         :extraCycles="3"
         :width="420"
         showControls
@@ -29,7 +28,7 @@
     <!-- 单选组件示例 -->
     <div class="radio-demo">
       <h2>单选组件示例</h2>
-      
+
       <div class="demo-section">
         <h3>基础用法</h3>
         <RadioGroup v-model="selectedValue1" :options="radioOptions1" />

@@ -62,7 +62,7 @@ const props = withDefaults(
     baseSpeedPerMs: 0.55,
     accelDuration: 600,
     minSpinDuration: 3600,
-    repeatTimes: 100,
+    repeatTimes: 20,
     extraCycles: 3,
     width: 420,
     forceWinnerIndex: null,
@@ -75,6 +75,12 @@ const emit = defineEmits<{
   (e: 'start'): void
   (e: 'reset'): void
 }>()
+
+const periodHeight = computed(() => props.prizes.length * props.itemHeight)
+function modP(v: number): number {
+  const p = periodHeight.value
+  return ((v % p) + p) % p // 数学模，永远 ≥ 0
+}
 
 const viewportHeight = props.itemHeight * props.visibleCount
 
@@ -122,6 +128,16 @@ function step(ts: number) {
     const speed = Math.max(0.1, Math.min(1.6, remain * 0.002))
     translateY.value += speed * delta
   }
+
+  // translateY.value = translateY.value % periodHeight.value
+
+  // if (translateY.value < 0) {
+  //   console.log('translateY.value < 0', translateY.value)
+  //   translateY.value += periodHeight.value
+  // }
+
+  translateY.value = modP(translateY.value)
+
   rafId = requestAnimationFrame(step)
 }
 
@@ -185,12 +201,19 @@ function stop() {
 
 function stopAtWinner() {
   running.value = false
+
+  translateY.value = modP(translateY.value)
+
   if (winnerIndex.value != null) {
+    console.log('translateY.value', translateY.value)
+    console.log('periodHeight.value', periodHeight.value)
+
     winnerLabel.value = props.prizes[winnerIndex.value]
     emit('finished', { index: winnerIndex.value, label: winnerLabel.value })
   }
-  const totalHeight = props.prizes.length * props.repeatTimes * props.itemHeight
-  translateY.value = translateY.value % totalHeight
+  // const totalHeight = props.prizes.length * props.repeatTimes * props.itemHeight
+  // translateY.value = translateY.value % totalHeight
+
   cancelRaf()
 }
 
