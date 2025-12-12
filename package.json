@@ -23,6 +23,7 @@
     "echarts": "^5.6.0",
     "fabric": "^6.6.4",
     "idb": "^8.0.2",
+    "matter-js": "^0.20.0",
     "nanoid": "^5.1.5",
     "number-precision": "^1.6.0",
     "pinia": "^3.0.1",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
+    "@types/matter-js": "^0.20.2",
     "@types/node": "^22.13.9",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",

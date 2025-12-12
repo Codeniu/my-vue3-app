@@ -81,6 +81,15 @@ const router = createRouter({
         title: '抽奖演示',
       },
     },
+    {
+      path: '/particle-effect',
+      name: 'particle-effect',
+      component: () => import('../views/ParticleEffectView.vue'),
+      meta: {
+        showInNav: true,
+        title: '粒子效果 (Antigravity)',
+      },
+    },
   ],
 })
 
